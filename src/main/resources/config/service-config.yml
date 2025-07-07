@@ -1,0 +1,27 @@
+service:
+  modulith:
+    strict:
+      enabled: true
+  messaging:
+    server-sent-events:
+      timeout-millis: ${SSE_TIMEOUT_MILLIS:0}
+      max-connections: ${SSE_MAX_CONNECTIONS:100}
+  actuator:
+    base: "/actuator"
+    health: "${service.actuator.base}/health"
+    info: "${service.actuator.base}/info"
+  web:
+    api:
+      root: ${SERVICE_WEB_API_ROOT}
+      version: ${SERVICE_WEB_API_VERSION}
+      base: "/${service.web.api.root}/${service.web.api.version}"
+    endpoints:
+      claude-code:
+        hooks:
+          base: "${service.web.api.base}/claude-code/hooks"
+          notification:
+            event: "${service.web.endpoints.claude-code.hooks.base}/notification/event"
+          stop:
+            event: "${service.web.endpoints.claude-code.hooks.base}/stop/event"
+          events:
+            stream: "${service.web.endpoints.claude-code.hooks.base}/events/stream"

@@ -1,0 +1,47 @@
+[versions]
+kotlin = "1.9.24"
+springBoot = "3.3.0"
+springDependencyManagement = "1.1.5"
+springModulith = "1.3.1"
+jacksonKotlin = "2.17.1"
+kotlinLogging = "7.0.3"
+mockk = "1.13.8"
+jsonAssert = "1.5.1"
+kotlinTest = "1.9.24"
+assertj = "3.24.2"
+
+[libraries]
+# Spring Boot
+spring-boot-starter-web = { module = "org.springframework.boot:spring-boot-starter-web" }
+spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
+
+# Jackson
+jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jacksonKotlin" }
+
+# Kotlin
+kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
+
+# Spring Modulith
+spring-modulith-starter-core = { module = "org.springframework.modulith:spring-modulith-starter-core", version.ref = "springModulith" }
+spring-modulith-core = { module = "org.springframework.modulith:spring-modulith-core", version.ref = "springModulith" }
+spring-modulith-starter-test = { module = "org.springframework.modulith:spring-modulith-starter-test", version.ref = "springModulith" }
+
+# Logging
+kotlin-logging = { module = "io.github.oshai:kotlin-logging-jvm", version.ref = "kotlinLogging" }
+
+# Testing
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+json-assert = { module = "org.skyscreamer:jsonassert", version.ref = "jsonAssert" }
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlinTest" }
+assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
+spring-boot = { id = "org.springframework.boot", version.ref = "springBoot" }
+spring-dependency-management = { id = "io.spring.dependency-management", version.ref = "springDependencyManagement" }
+
+[bundles]
+spring-boot = ["spring-boot-starter-web", "jackson-module-kotlin", "kotlin-reflect"]
+spring-modulith = ["spring-modulith-starter-core", "spring-modulith-core"]
+testing = ["spring-boot-starter-test", "spring-modulith-starter-test", "mockk", "json-assert", "kotlin-test", "assertj-core"]

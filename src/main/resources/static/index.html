@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code Hooks Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .status-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #dc3545;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.connected {
+            background: #28a745;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.9);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .notification-control-card {
+            background: linear-gradient(135deg, #ffc107 0%, #ff8c00 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            color: #212529;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+        }
+
+        .notification-control-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .notification-control-icon {
+            font-size: 24px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 50%;
+            min-width: 44px;
+            text-align: center;
+        }
+
+        .notification-control-text {
+            flex: 1;
+        }
+
+        .notification-control-title {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .notification-control-subtitle {
+            font-size: 13px;
+            opacity: 0.8;
+        }
+
+        .notification-enable-btn {
+            background: #fff;
+            color: #212529;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .notification-enable-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .notification-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .notification-status.granted {
+            color: #155724;
+        }
+
+        .notification-status.denied {
+            color: #721c24;
+        }
+
+        .notification-status.default {
+            color: #856404;
+        }
+
+        .permission-card {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .permission-card.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        .permission-title {
+            font-weight: bold;
+            color: #856404;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .permission-text {
+            color: #856404;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .permission-button {
+            background: #ffc107;
+            color: #212529;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+        }
+
+        .permission-button:hover {
+            background: #e0a800;
+            transform: translateY(-1px);
+        }
+
+        .permission-help {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 10px;
+            line-height: 1.4;
+        }
+
+        .test-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .test-button:active {
+            transform: translateY(0);
+        }
+
+        .notifications-container {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .notifications-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notifications-list {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            gap: 15px;
+            align-items: flex-start;
+            transition: all 0.3s ease;
+            animation: slideIn 0.3s ease;
+        }
+
+        .notification-item:hover {
+            background: #f8f9fa;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-icon {
+            font-size: 24px;
+            min-width: 40px;
+            text-align: center;
+            margin-top: 5px;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-message {
+            font-size: 16px;
+            line-height: 1.5;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .notification-project {
+            font-size: 13px;
+            color: #6b7280;
+            background: #f3f4f6;
+            padding: 4px 8px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-top: 5px;
+        }
+
+        .notification-meta {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 5px;
+            min-width: 100px;
+        }
+
+        .notification-time {
+            font-size: 12px;
+            color: #6b7280;
+            white-space: nowrap;
+        }
+
+        .notification-date {
+            font-size: 11px;
+            color: #9ca3af;
+            white-space: nowrap;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #6b7280;
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .empty-subtitle {
+            font-size: 14px;
+            color: #9ca3af;
+            margin-top: 10px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .connection-status {
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Claude Code Hooks</h1>
+            <p>Real-time notification dashboard for Claude Code integration</p>
+        </div>
+
+        <div class="status-card">
+            <div class="status-indicator">
+                <div class="status-dot" id="statusDot"></div>
+                <span>Service Status: </span>
+                <span class="connection-status" id="connectionStatus">Connecting...</span>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="notificationCount">0</div>
+                    <div class="stat-label">Notifications</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="activeStreams">0</div>
+                    <div class="stat-label">Active Streams</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="uptime">00:00:00</div>
+                    <div class="stat-label">Uptime</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="notification-control-card" id="notificationControlCard">
+            <div class="notification-control-info">
+                <div class="notification-control-icon" id="notificationIcon">🔔</div>
+                <div class="notification-control-text">
+                    <div class="notification-control-title">Browser Notifications</div>
+                    <div class="notification-control-subtitle">Get alerts in your system notification center (macOS, Windows, Linux)</div>
+                </div>
+            </div>
+            <div id="notificationControlAction">
+                <button class="notification-enable-btn" onclick="enableNotifications()" id="enableNotificationBtn">
+                    Enable Notifications
+                </button>
+            </div>
+        </div>
+
+        <div id="permissionCard" class="permission-card">
+            <div class="permission-title">
+                🔔 Enable Browser Notifications
+            </div>
+            <div class="permission-text">
+                Get instant notifications in your system's notification center when Claude needs your attention. 
+                This works on macOS, Windows, and Linux.
+            </div>
+            <button class="permission-button" onclick="requestNotificationPermission()">
+                Enable Notifications
+            </button>
+            <button class="permission-button" onclick="dismissPermissionCard()" style="background: #6c757d; color: white;">
+                Maybe Later
+            </button>
+            <div class="permission-help">
+                <strong>Having trouble?</strong><br>
+                • <strong>Chrome/Edge:</strong> Click "Allow" in the address bar popup<br>
+                • <strong>Firefox:</strong> Click "Allow" in the notification popup<br>
+                • <strong>Safari:</strong> Go to Safari → Preferences → Websites → Notifications<br>
+                • <strong>Blocked?</strong> Click the 🔒 icon in your address bar to change notification settings
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="test-button" onclick="sendTestNotification('APPROVAL')">
+                🔒 Test Permission Request
+            </button>
+            <button class="test-button" onclick="sendTestNotification('INFO')">
+                ℹ️ Test Info Message
+            </button>
+            <button class="test-button" onclick="playTestSound()">
+                🔊 Test Sound
+            </button>
+            <button class="test-button" onclick="clearNotifications()">
+                🗑️ Clear History
+            </button>
+            <button class="test-button" onclick="testBrowserNotification()">
+                🔔 Test Browser Notification
+            </button>
+        </div>
+
+        <div class="notifications-container">
+            <div class="notifications-header">
+                <h2>📬 Recent Notifications</h2>
+                <div id="notificationStats">0 total</div>
+            </div>
+            <div id="notificationsList" class="notifications-list">
+                <div class="empty-state">
+                    <div class="empty-icon">📭</div>
+                    <p>No notifications yet</p>
+                    <p class="empty-subtitle">Test the connection or wait for Claude to request permissions</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let eventSource;
+        let notifications = [];
+        let notificationCount = 0;
+        let activeStreams = 0;
+        let startTime = Date.now();
+        let audioContext;
+        let isAudioInitialized = false;
+
+        function initializeAudio() {
+            if (!isAudioInitialized) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                isAudioInitialized = true;
+                console.log('Audio context initialized');
+            }
+        }
+
+        function resumeAudioContext() {
+            if (audioContext && audioContext.state === 'suspended') {
+                audioContext.resume().then(() => {
+                    console.log('Audio context resumed');
+                }).catch(err => {
+                    console.error('Failed to resume audio context:', err);
+                });
+            }
+        }
+
+        function connectToEventStream() {
+            if (eventSource) {
+                eventSource.close();
+            }
+            
+            eventSource = new EventSource('/api/v1/claude-code/hooks/events/stream');
+            
+            eventSource.onopen = function(event) {
+                console.log('Connected to event stream');
+                updateConnectionStatus('connected');
+                activeStreams = 1;
+                updateStats();
+            };
+            
+            eventSource.onmessage = function(event) {
+                console.log('Received event:', event.data);
+            };
+            
+            eventSource.addEventListener('connected', function(event) {
+                console.log('Connection established:', event.data);
+                // Connection already handled in onopen
+            });
+            
+            eventSource.addEventListener('claude-hook', function(event) {
+                console.log('Claude hook event received:', event.data);
+                const hookEvent = JSON.parse(event.data);
+                handleClaudeHookEvent(hookEvent);
+            });
+            
+            eventSource.onerror = function(event) {
+                console.error('EventSource error:', event);
+                updateConnectionStatus('disconnected');
+                activeStreams = 0;
+                updateStats();
+                setTimeout(connectToEventStream, 5000);
+            };
+        }
+
+        function handleClaudeHookEvent(hookEvent) {
+            console.log('Handling Claude hook event:', hookEvent);
+            
+            notificationCount++;
+            notifications.unshift(hookEvent);
+            
+            updateNotificationsList();
+            updateStats();
+            
+            if (Notification.permission === 'granted') {
+                showBrowserNotification(hookEvent);
+            }
+            
+            playGlassSound();
+        }
+
+        function showBrowserNotification(hookEvent) {
+            console.log('Attempting to show browser notification for:', hookEvent);
+            console.log('Notification permission status:', Notification.permission);
+            
+            if (Notification.permission !== 'granted') {
+                console.warn('Notification permission not granted:', Notification.permission);
+                return;
+            }
+
+            try {
+                const browserNotification = new Notification('🤖 Claude Code Hooks', {
+                    body: hookEvent.message,
+                    icon: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMCA5TDEzLjA5IDE1Ljc0TDEyIDIyTDEwLjkxIDE1Lc0TDQgOUwxMC45MSA4LjI2TDEyIDJaIiBmaWxsPSIjNjY3ZWVhIi8+Cjwvc3ZnPgo=',
+                    requireInteraction: false,
+                    silent: false,
+                    tag: 'claude-hook-' + hookEvent.id,
+                    timestamp: Date.now()
+                });
+                
+                console.log('Browser notification created successfully:', browserNotification);
+                
+                browserNotification.onshow = function() {
+                    console.log('✅ Notification shown successfully');
+                };
+                
+                browserNotification.onerror = function(error) {
+                    console.error('❌ Notification error:', error);
+                };
+                
+                browserNotification.onclick = function() {
+                    console.log('Notification clicked');
+                    window.focus();
+                    browserNotification.close();
+                };
+                
+                browserNotification.onclose = function() {
+                    console.log('Notification closed');
+                };
+                
+            } catch (error) {
+                console.error('Error creating notification:', error);
+            }
+        }
+
+        function updateConnectionStatus(status) {
+            const statusElement = document.getElementById('connectionStatus');
+            const dotElement = document.getElementById('statusDot');
+            
+            if (status === 'connected') {
+                statusElement.textContent = 'Connected';
+                statusElement.style.color = '#28a745';
+                dotElement.classList.add('connected');
+            } else {
+                statusElement.textContent = 'Disconnected';
+                statusElement.style.color = '#dc3545';
+                dotElement.classList.remove('connected');
+            }
+        }
+
+        function updateNotificationsList() {
+            const listElement = document.getElementById('notificationsList');
+            
+            if (notifications.length === 0) {
+                listElement.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📭</div>
+                        <p>No notifications yet</p>
+                        <p class="empty-subtitle">Test the connection or wait for Claude to request permissions</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const notificationsHtml = notifications.map(notification => {
+                console.log('Processing notification:', notification);
+                console.log('Timestamp value:', notification.timestamp, 'Type:', typeof notification.timestamp);
+                
+                let timestamp;
+                let timeStr = 'Unknown time';
+                let dateStr = 'Unknown date';
+                
+                try {
+                    // Handle different timestamp formats
+                    if (notification.timestamp) {
+                        if (typeof notification.timestamp === 'string') {
+                            // Try parsing ISO string
+                            timestamp = new Date(notification.timestamp);
+                        } else if (typeof notification.timestamp === 'number') {
+                            // Handle Unix timestamp (milliseconds)
+                            timestamp = new Date(notification.timestamp);
+                        } else {
+                            // Already a Date object
+                            timestamp = notification.timestamp;
+                        }
+                        
+                        // Check if date is valid
+                        if (!isNaN(timestamp.getTime())) {
+                            timeStr = formatTime(timestamp);
+                            dateStr = formatDate(timestamp);
+                        } else {
+                            console.warn('Invalid timestamp:', notification.timestamp);
+                            // Use current time as fallback
+                            timestamp = new Date();
+                            timeStr = formatTime(timestamp);
+                            dateStr = formatDate(timestamp);
+                        }
+                    } else {
+                        // No timestamp provided, use current time
+                        timestamp = new Date();
+                        timeStr = formatTime(timestamp);
+                        dateStr = formatDate(timestamp);
+                    }
+                } catch (error) {
+                    console.error('Error parsing timestamp:', error, notification.timestamp);
+                    // Fallback to current time
+                    timestamp = new Date();
+                    timeStr = formatTime(timestamp);
+                    dateStr = formatDate(timestamp);
+                }
+                
+                const projectDisplay = notification.projectContext ? 
+                    `<div class="notification-project">📁 ${notification.projectContext}</div>` : '';
+                
+                return `
+                    <div class="notification-item">
+                        <div class="notification-icon">🤖</div>
+                        <div class="notification-content">
+                            <div class="notification-message">${notification.message}</div>
+                            ${projectDisplay}
+                        </div>
+                        <div class="notification-meta">
+                            <div class="notification-time">${timeStr}</div>
+                            <div class="notification-date">${dateStr}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            listElement.innerHTML = notificationsHtml;
+        }
+
+        function formatTime(date) {
+            return date.toLocaleTimeString('en-GB', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+        }
+
+        function formatDate(date) {
+            return date.toLocaleDateString('en-GB', { 
+                day: '2-digit', 
+                month: '2-digit', 
+                year: 'numeric' 
+            });
+        }
+
+        function updateStats() {
+            document.getElementById('notificationCount').textContent = notificationCount;
+            document.getElementById('activeStreams').textContent = activeStreams;
+            document.getElementById('notificationStats').textContent = `${notificationCount} total`;
+            
+            const uptimeMs = Date.now() - startTime;
+            const uptimeStr = formatUptime(uptimeMs);
+            document.getElementById('uptime').textContent = uptimeStr;
+        }
+
+        function formatUptime(ms) {
+            const seconds = Math.floor(ms / 1000);
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            
+            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function clearNotifications() {
+            notifications = [];
+            notificationCount = 0;
+            updateNotificationsList();
+            updateStats();
+        }
+
+        function playGlassSound() {
+            resumeAudioContext();
+            
+            if (!audioContext || audioContext.state !== 'running') {
+                console.log('Audio context not ready');
+                return;
+            }
+            
+            try {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                const filterNode = audioContext.createBiquadFilter();
+                
+                oscillator.frequency.setValueAtTime(2093, audioContext.currentTime);
+                oscillator.type = 'sine';
+                
+                filterNode.type = 'bandpass';
+                filterNode.frequency.setValueAtTime(2093, audioContext.currentTime);
+                filterNode.Q.setValueAtTime(10, audioContext.currentTime);
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 1.2);
+                
+                oscillator.connect(filterNode);
+                filterNode.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 1.2);
+                
+                console.log('Glass notification sound played');
+            } catch (e) {
+                console.error('Audio playback error:', e);
+            }
+        }
+
+        function playTestSound() {
+            initializeAudio();
+            resumeAudioContext();
+            setTimeout(playGlassSound, 100);
+        }
+
+        function sendTestNotification(type) {
+            const messages = {
+                'APPROVAL': 'Claude needs your permission to continue',
+                'INFO': 'This is a test information message'
+            };
+            
+            const message = messages[type] || 'Test notification';
+            
+            fetch('/api/v1/claude-code/hooks/notification/event', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    hookType: 'notification',
+                    message: message,
+                    metadata: {
+                        timestamp: new Date().toISOString(),
+                        transcriptPath: `/Users/test/projects/test-project/session-${Date.now()}`
+                    }
+                })
+            })
+            .then(response => response.text())
+            .then(data => {
+                console.log('Test notification sent:', data);
+            })
+            .catch(error => {
+                console.error('Error sending test notification:', error);
+            });
+        }
+
+        function keepAudioAlive() {
+            if (audioContext && audioContext.state === 'running') {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                oscillator.frequency.setValueAtTime(20, audioContext.currentTime);
+                gainNode.gain.setValueAtTime(0.001, audioContext.currentTime);
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.001);
+            }
+        }
+
+        function showPermissionCard() {
+            const card = document.getElementById('permissionCard');
+            card.classList.add('show');
+        }
+
+        function hidePermissionCard() {
+            const card = document.getElementById('permissionCard');
+            card.classList.remove('show');
+        }
+
+        function dismissPermissionCard() {
+            hidePermissionCard();
+            localStorage.setItem('notificationPermissionDismissed', 'true');
+        }
+
+        function requestNotificationPermission() {
+            console.log('Requesting notification permission...');
+            
+            if (!('Notification' in window)) {
+                alert('This browser does not support desktop notifications.');
+                return;
+            }
+
+            // Must be called from user interaction
+            Notification.requestPermission().then(function(permission) {
+                console.log('Notification permission:', permission);
+                
+                if (permission === 'granted') {
+                    console.log('Notification permission granted!');
+                    hidePermissionCard();
+                    
+                    // Show a test notification to confirm it works
+                    new Notification('🎉 Notifications Enabled!', {
+                        body: 'You\'ll now receive Claude Code notifications in your system notification center.',
+                        icon: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMCA5TDEzLjA5IDE1Ljc0TDEyIDIyTDEwLjkxIDE1Ljc0TDQgOUwxMC45MSA4LjI2TDEyIDJaIiBmaWxsPSIjMjhhNzQ1Ii8+Cjwvc3ZnPgo=',
+                        tag: 'permission-granted',
+                        requireInteraction: false
+                    });
+                } else if (permission === 'denied') {
+                    console.log('Notification permission denied');
+                    alert('Notifications were blocked. To enable them:\n\n' +
+                          '• Chrome/Edge: Click the 🔒 icon in the address bar\n' +
+                          '• Firefox: Click the shield icon\n' +
+                          '• Safari: Safari → Preferences → Websites → Notifications\n\n' +
+                          'Then refresh this page and try again.');
+                } else {
+                    console.log('Notification permission dismissed');
+                }
+            }).catch(function(error) {
+                console.error('Error requesting notification permission:', error);
+                alert('Error requesting permission. Please try refreshing the page.');
+            });
+        }
+
+        function updateNotificationControlCard() {
+            const controlCard = document.getElementById('notificationControlCard');
+            const icon = document.getElementById('notificationIcon');
+            const actionDiv = document.getElementById('notificationControlAction');
+            
+            if (!('Notification' in window)) {
+                controlCard.style.display = 'none';
+                return;
+            }
+
+            const permission = Notification.permission;
+            
+            switch (permission) {
+                case 'granted':
+                    icon.textContent = '✅';
+                    actionDiv.innerHTML = `
+                        <div class="notification-status granted">
+                            <span>🟢</span>
+                            <span>Enabled</span>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'denied':
+                    icon.textContent = '❌';
+                    actionDiv.innerHTML = `
+                        <div class="notification-status denied">
+                            <span>🔴</span>
+                            <span>Blocked</span>
+                        </div>
+                        <button class="notification-enable-btn" onclick="showNotificationHelp()" style="margin-left: 10px;">
+                            Fix This
+                        </button>
+                    `;
+                    break;
+                    
+                default: // 'default'
+                    icon.textContent = '🔔';
+                    actionDiv.innerHTML = `
+                        <button class="notification-enable-btn" onclick="enableNotifications()" id="enableNotificationBtn">
+                            Enable Notifications
+                        </button>
+                    `;
+                    break;
+            }
+        }
+
+        function enableNotifications() {
+            console.log('Enable notifications clicked');
+            
+            if (!('Notification' in window)) {
+                alert('Your browser does not support desktop notifications.');
+                return;
+            }
+
+            if (Notification.permission === 'granted') {
+                console.log('Notifications already granted');
+                testBrowserNotification();
+                return;
+            }
+
+            if (Notification.permission === 'denied') {
+                showNotificationHelp();
+                return;
+            }
+
+            // Request permission
+            console.log('Requesting notification permission...');
+            Notification.requestPermission().then(function(permission) {
+                console.log('Permission result:', permission);
+                updateNotificationControlCard();
+                
+                if (permission === 'granted') {
+                    // Show success notification
+                    new Notification('🎉 Notifications Enabled!', {
+                        body: 'You\'ll now receive Claude Code notifications in your system notification center.',
+                        icon: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMCA5TDEzLjA5IDE1Ljc0TDEyIDIyTDEwLjkxIDE1Lc0TDQgOUwxMC45MSA4LjI2TDEyIDJaIiBmaWxsPSIjMjhhNzQ1Ii8+Cjwvc3ZnPgo=',
+                        tag: 'permission-granted'
+                    });
+                } else {
+                    console.log('Permission not granted:', permission);
+                }
+            }).catch(function(error) {
+                console.error('Error requesting permission:', error);
+                alert('Error requesting permission. Please try refreshing the page.');
+            });
+        }
+
+        function showNotificationHelp() {
+            const helpText = `Notifications are currently blocked. To enable them:
+
+🌐 Chrome/Edge:
+1. Click the 🔒 icon in the address bar
+2. Change "Notifications" to "Allow"
+3. Refresh this page
+
+🦊 Firefox:
+1. Click the shield icon in the address bar
+2. Allow notifications
+3. Refresh this page
+
+🧭 Safari:
+1. Safari → Preferences → Websites
+2. Notifications → Find this site → Allow
+3. Refresh this page
+
+💡 Alternative:
+• Check your browser's notification settings
+• Disable "Do Not Disturb" mode
+• Make sure notifications aren't blocked system-wide`;
+
+            alert(helpText);
+        }
+
+        function checkNotificationPermission() {
+            updateNotificationControlCard();
+        }
+
+        function testBrowserNotification() {
+            console.log('Testing browser notification...');
+            console.log('Notification permission:', Notification.permission);
+            console.log('Notification support:', 'Notification' in window);
+            
+            if (Notification.permission !== 'granted') {
+                alert('Please enable notifications first using the yellow card above or by clicking "Enable Notifications".');
+                return;
+            }
+            
+            // Create a test notification
+            const testNotification = new Notification('🧪 Test Notification', {
+                body: 'If you see this, browser notifications are working correctly!',
+                icon: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMCA5TDEzLjA5IDE1Ljc0TDEyIDIyTDEwLjkxIDE1Lc0TDQgOUwxMC45MSA4LjI2TDEyIDJaIiBmaWxsPSIjZmZjMTA3Ii8+Cjwvc3ZnPgo=',
+                tag: 'test-notification',
+                requireInteraction: false,
+                timestamp: Date.now()
+            });
+            
+            testNotification.onshow = function() {
+                console.log('✅ Test notification shown successfully');
+            };
+            
+            testNotification.onerror = function(error) {
+                console.error('❌ Test notification error:', error);
+                alert('Notification failed to show. Check browser console for details.');
+            };
+            
+            testNotification.onclick = function() {
+                console.log('Test notification clicked');
+                window.focus();
+                testNotification.close();
+            };
+            
+            // Auto-close after 5 seconds
+            setTimeout(() => {
+                testNotification.close();
+            }, 5000);
+        }
+
+        // Initialize on first user interaction
+        document.addEventListener('click', function initializeOnInteraction() {
+            initializeAudio();
+            resumeAudioContext();
+            document.removeEventListener('click', initializeOnInteraction);
+        }, { once: true });
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Initializing Claude Code Hooks Dashboard');
+            connectToEventStream();
+            
+            // Update uptime every second
+            setInterval(updateStats, 1000);
+            
+            // Keep audio alive
+            setInterval(keepAudioAlive, 30000);
+            
+            // Check and potentially show notification permission card
+            checkNotificationPermission();
+        });
+    </script>
+</body>
+</html>
