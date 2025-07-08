@@ -15,13 +15,25 @@ This is a **Claude Code Hooks - Notification Service**, a cross-platform Spring 
 - **Build project**: `./gradlew build` 
 - **Run tests**: `./gradlew test`
 - **Clean build**: `./gradlew clean build`
+- **Build JAR**: `./gradlew bootJar`
+
+### Docker Commands
+- **Build Docker image**: `./gradlew dockerBuild`
+- **Start with Docker Compose**: `./gradlew dockerUp`
+- **Stop Docker containers**: `./gradlew dockerDown`
+
+### Testing Commands
+- **Run all tests**: `./gradlew test`
+- **Run integration tests**: `./gradlew test --tests "*IntegrationTest"`
+- **Run modularity tests**: `./gradlew test --tests "*ModularityTest"`
+- **Run single test**: `./gradlew test --tests "NotificationHookIntegrationTest"`
 
 ### Development Environment
 - **JDK**: 21+ required
 - **Gradle**: 8+ (use wrapper `./gradlew`)
 - **Main class**: `com.cordona.claudecodehooks.Application`
-- **Default port**: 8080
-- **Dashboard URL**: `http://localhost:8080`
+- **Default port**: 8080 (development), 8085 (Docker)
+- **Dashboard URL**: `http://localhost:8080` (development), `http://localhost:8085` (Docker)
 
 ### Key Configuration Files
 - **Application config**: `src/main/resources/application.yml`
@@ -36,13 +48,13 @@ The application uses **SpringModulith** with strict module boundaries enforced a
 
 **Module Structure**:
 ```
-web/ → service::api → events::api
+web/ → service::api → infrastructure/messaging::api
 ```
 
 **Key Modules**:
 - **`web/`**: HTTP routing and handlers (REST endpoints)
 - **`service/`**: Domain logic and business rules
-- **`events/`**: Event publishing and SSE infrastructure
+- **`infrastructure/messaging/`**: Event publishing and SSE infrastructure
 - **`shared/`**: Common models and configuration properties
 
 ### Technology Stack
@@ -57,7 +69,7 @@ web/ → service::api → events::api
 Claude Hook (curl) → HTTP Router → Handler → Domain Service → Event Publisher → SSE Stream → UI Dashboard
 ```
 
-**Single SSE Stream Design**: All Claude interactions (permission requests, task completions, errors) flow through one unified event stream at `/notifications` endpoint.
+**Single SSE Stream Design**: All Claude interactions (permission requests, task completions, errors) flow through one unified event stream at `/api/v1/claude-code/hooks/events/stream` endpoint.
 
 ## Key Integration Points
 
@@ -70,7 +82,14 @@ Configure in `~/.claude/settings.json`:
       "matcher": "*",
       "hooks": [{
         "type": "command",
-        "command": "curl -s -X POST http://localhost:8080/notify -H 'Content-Type: application/json' -d '{\"message\":\"Claude needs your permission\", \"type\":\"APPROVAL\", \"title\":\"🤖 Claude Code\"}'"
+        "command": "curl -s -X POST http://localhost:8080/api/v1/claude-code/hooks/notification/event -H 'Content-Type: application/json' -d '{\"message\":\"Claude needs your permission\", \"type\":\"APPROVAL\", \"title\":\"🤖 Claude Code\"}'"
+      }]
+    }],
+    "Stop": [{
+      "matcher": "*",
+      "hooks": [{
+        "type": "command",
+        "command": "curl -s -X POST http://localhost:8080/api/v1/claude-code/hooks/stop/event -H 'Content-Type: application/json' -d '{\"message\":\"Claude task completed\", \"title\":\"🤖 Claude Code\"}'"
       }]
     }]
   }
@@ -78,9 +97,10 @@ Configure in `~/.claude/settings.json`:
 ```
 
 ### API Endpoints
-- **POST /notify**: Trigger notifications
-- **GET /notifications**: SSE stream for real-time events
-- **GET /status**: Service health check
+- **POST /api/v1/claude-code/hooks/notification/event**: Trigger notification hooks
+- **POST /api/v1/claude-code/hooks/stop/event**: Trigger stop hooks
+- **GET /api/v1/claude-code/hooks/events/stream**: SSE stream for real-time events
+- **GET /actuator/health**: Service health check
 
 ## Development Patterns
 
@@ -88,8 +108,8 @@ Configure in `~/.claude/settings.json`:
 All HTTP routing uses Spring WebFlux functional routing:
 ```kotlin
 @Bean
-fun notificationMessageEndpoint(): RouterFunction<ServerResponse> =
-    RouterFunctions.route(POST(properties.claudeCode.hooks.notification.message), handler)
+fun notificationEventEndpoint(): RouterFunction<ServerResponse> =
+    RouterFunctions.route(POST(properties.claudeCode.hooks.notification.event), handler)
 ```
 
 ### Configuration-Driven Design
@@ -101,7 +121,11 @@ service:
       claude-code:
         hooks:
           notification:
-            message: "/api/v1/claude-code/hooks/notification/message"
+            event: "/api/v1/claude-code/hooks/notification/event"
+          stop:
+            event: "/api/v1/claude-code/hooks/stop/event"
+          events:
+            stream: "/api/v1/claude-code/hooks/events/stream"
 ```
 
 ### Event Publishing Pattern
@@ -119,23 +143,26 @@ All async operations use Virtual Threads for high-concurrency SSE connections.
 
 ### Important Files
 - **Main Application**: `src/main/kotlin/com/cordona/claudecodehooks/Application.kt`
-- **HTTP Router**: `src/main/kotlin/com/cordona/claudecodehooks/web/internal/rest/hooks/notification/message/NotificationMessageRouter.kt`
-- **Request Handler**: `NotificationMessageHandler.kt`
-- **Event Publisher**: `src/main/kotlin/com/cordona/claudecodehooks/events/external/publisher/EventPublisher.kt`
-- **SSE Implementation**: `src/main/kotlin/com/cordona/claudecodehooks/events/internal/sse/SseEventPublisher.kt`
+- **HTTP Routers**: 
+  - `src/main/kotlin/com/cordona/claudecodehooks/web/internal/rest/hooks/notification/event/NotificationEventRouter.kt`
+  - `src/main/kotlin/com/cordona/claudecodehooks/web/internal/rest/hooks/stop/event/StopEventRouter.kt`
+- **Request Handlers**: `NotificationEventHandler.kt`, `StopEventHandler.kt`
+- **Event Publisher**: `src/main/kotlin/com/cordona/claudecodehooks/infrastructure/messaging/external/api/EventPublisher.kt`
+- **SSE Implementation**: `src/main/kotlin/com/cordona/claudecodehooks/infrastructure/messaging/internal/sse/SseEventPublisher.kt`
 - **Properties**: `src/main/kotlin/com/cordona/claudecodehooks/web/internal/properties/EndpointProperties.kt`
 
 ### Module Dependencies
 - **Web layer** depends on `service::api` (business logic interfaces)
-- **Service layer** depends on `events::api` (event publishing interfaces)
-- **Events layer** has no domain dependencies (pure infrastructure)
+- **Service layer** depends on `infrastructure/messaging::api` (event publishing interfaces)
+- **Infrastructure layer** has no domain dependencies (pure infrastructure)
 
 ## Testing and Validation
 
 ### Manual Testing
 - Use dashboard at `http://localhost:8080` with built-in test buttons
-- Test curl commands: `curl -X POST http://localhost:8080/notify -H "Content-Type: application/json" -d '{"message":"Test notification"}'`
-- Check SSE stream: Open browser dev tools and monitor network tab for EventSource connections
+- Test notification curl: `curl -X POST http://localhost:8080/api/v1/claude-code/hooks/notification/event -H "Content-Type: application/json" -d '{"message":"Test notification"}'`
+- Test stop curl: `curl -X POST http://localhost:8080/api/v1/claude-code/hooks/stop/event -H "Content-Type: application/json" -d '{"message":"Test completed"}'`
+- Check SSE stream: Open browser dev tools and monitor network tab for EventSource connections at `/api/v1/claude-code/hooks/events/stream`
 
 ### Audio System Testing
 - Click anywhere on dashboard to initialize audio context
