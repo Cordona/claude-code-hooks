@@ -41,9 +41,11 @@ export class StatsManager {
         
         // Start update interval
         this.startUpdateInterval();
+        logger.info('Started stats update interval');
         
         // Initial UI update
         this.updateUI();
+        logger.info('Stats Manager initialized successfully');
     }
 
     /**
@@ -88,6 +90,7 @@ export class StatsManager {
             this.updateStats();
             this.updateUI();
         }, 1000);
+        logger.debug('Stats update interval started (1000ms)');
     }
 
     /**
@@ -144,22 +147,30 @@ export class StatsManager {
      * Update UI elements
      */
     updateUI() {
-        // Update active streams count
-        const activeStreamsElement = document.getElementById('activeStreamsCount');
-        if (activeStreamsElement) {
-            activeStreamsElement.textContent = this.stats.connectionCount;
-        }
-        
-        // Update uptime display
-        const uptimeElement = document.getElementById('uptimeDisplay');
-        if (uptimeElement) {
-            uptimeElement.textContent = this.formatUptime(this.stats.uptime);
-        }
-        
-        // Update notifications title
-        const notificationsTitle = document.getElementById('notificationsTitle');
-        if (notificationsTitle) {
-            notificationsTitle.textContent = `Recent Notifications (${this.stats.eventCount} total)`;
+        try {
+            // Update active streams count
+            const activeStreamsElement = document.getElementById('activeStreamsCount');
+            if (activeStreamsElement) {
+                activeStreamsElement.textContent = this.stats.connectionCount;
+            }
+            
+            // Update uptime display
+            const uptimeElement = document.getElementById('uptimeDisplay');
+            if (uptimeElement) {
+                const formattedUptime = this.formatUptime(this.stats.uptime);
+                uptimeElement.textContent = formattedUptime;
+                logger.debug(`Updated uptime display: ${formattedUptime}`);
+            } else {
+                logger.error('Could not find uptimeDisplay element');
+            }
+            
+            // Update notifications title
+            const notificationsTitle = document.getElementById('notificationsTitle');
+            if (notificationsTitle) {
+                notificationsTitle.textContent = `Recent Notifications (${this.stats.eventCount} total)`;
+            }
+        } catch (error) {
+            logger.error('Error updating UI:', error);
         }
     }
 

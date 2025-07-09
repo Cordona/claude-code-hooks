@@ -12,9 +12,10 @@ data class StopHookRequest(
     val stopHookActive: Boolean
 )
 
-fun StopHookRequest.toModel(): StopHook {
+fun StopHookRequest.toModel(contextWorkDirectory: String?): StopHook {
     return StopHook(
         stopHookActive = this.stopHookActive,
+        contextWorkDirectory = contextWorkDirectory,
         metadata = HookMetadata(
             timestamp = Instant.now().toString(),
             hookType = HookType.fromValue(this.hookEventName),

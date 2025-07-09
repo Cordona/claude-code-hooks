@@ -195,8 +195,8 @@ export class NotificationManager {
                 throw new Error('Invalid event data provided');
             }
             
-            if (!hookEvent.message) {
-                throw new Error('Event message is required');
+            if (!hookEvent.reason && !hookEvent.message) {
+                throw new Error('Event reason is required');
             }
             
             // Add to history
@@ -206,7 +206,7 @@ export class NotificationManager {
             if (this.permission === 'granted') {
                 await this.showNotification({
                     title: '🤖 Claude Code Hooks',
-                    message: hookEvent.message,
+                    message: hookEvent.reason || hookEvent.message,
                     data: hookEvent
                 });
             }
@@ -229,9 +229,9 @@ export class NotificationManager {
     addToHistory(hookEvent) {
         const notification = {
             id: hookEvent.id,
-            message: hookEvent.message,
+            message: hookEvent.reason || hookEvent.message,
             timestamp: hookEvent.timestamp,
-            projectContext: hookEvent.project_context || hookEvent.projectContext,
+            projectContext: hookEvent.context_work_directory || hookEvent.project_context || hookEvent.projectContext,
             addedAt: new Date().toISOString()
         };
         
@@ -406,10 +406,18 @@ export class NotificationManager {
                 const timeStr = this.formatTime(timestamp);
                 const dateStr = this.formatDate(timestamp);
                 
+                // Create project path display
+                const projectPathHTML = notification.projectContext 
+                    ? `<div class="notifications__project-path notifications__project-path--loaded">${notification.projectContext}</div>`
+                    : '';
+                
                 return `
                     <div class="notifications__row" role="row">
                         <div class="notifications__cell notifications__cell--time" role="cell">${timeStr}</div>
-                        <div class="notifications__cell notifications__cell--message" role="cell">${notification.message}</div>
+                        <div class="notifications__cell notifications__cell--message" role="cell">
+                            <div class="notifications__reason">${notification.message}</div>
+                            ${projectPathHTML}
+                        </div>
                         <div class="notifications__cell notifications__cell--date" role="cell">${dateStr}</div>
                         <div class="notifications__cell notifications__cell--actions" role="cell">
                             <button 

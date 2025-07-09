@@ -1,6 +1,6 @@
 {
   "id": "IGNORE_FIELD",
-  "message": "Claude Code plan is ready for review",
+  "reason": "Claude Code plan is ready for review",
   "timestamp": "IGNORE_FIELD",
-  "project_context": "people-spheres-claude-code-custom-commands"
+  "context_work_directory": "people-spheres-claude-code-custom-commands"
 }

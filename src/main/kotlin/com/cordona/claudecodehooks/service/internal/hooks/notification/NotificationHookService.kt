@@ -2,10 +2,11 @@ package com.cordona.claudecodehooks.service.internal.hooks.notification
 
 import com.cordona.claudecodehooks.infrastructure.messaging.external.api.EventPublisher
 import com.cordona.claudecodehooks.service.external.api.NotificationHookProcessor
-import com.cordona.claudecodehooks.service.internal.hooks.resolveProjectContext
 import com.cordona.claudecodehooks.shared.models.ClaudeHookEvent
 import com.cordona.claudecodehooks.shared.models.NotificationHook
 import org.springframework.stereotype.Service
+import java.time.Instant
+import java.util.*
 
 @Service
 class NotificationHookService(
@@ -14,9 +15,10 @@ class NotificationHookService(
 
 	override fun execute(target: NotificationHook) {
 		val claudeHookEvent = ClaudeHookEvent(
-			timestamp = target.metadata.timestamp,
-			message = resolveMessage(target.message),
-			projectContext = target.metadata.transcriptPath.resolveProjectContext()
+			id = UUID.randomUUID().toString(),
+			reason = resolveMessage(target.message),
+			timestamp = Instant.now().toString(),
+			contextWorkDirectory = target.contextWorkDirectory
 		)
 
 		eventPublisher.publish(claudeHookEvent)

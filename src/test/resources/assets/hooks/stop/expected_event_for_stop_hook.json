@@ -1,6 +1,6 @@
 {
   "id": "IGNORE_FIELD",
-  "message": "Continue your claude session",
+  "reason": "Continue your claude session",
   "timestamp": "IGNORE_FIELD",
-  "project_context": "people-spheres-claude-code-custom-commands"
+  "context_work_directory": "people-spheres-claude-code-custom-commands"
 }

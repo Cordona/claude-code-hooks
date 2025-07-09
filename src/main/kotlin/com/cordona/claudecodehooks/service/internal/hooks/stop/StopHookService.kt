@@ -2,10 +2,11 @@ package com.cordona.claudecodehooks.service.internal.hooks.stop
 
 import com.cordona.claudecodehooks.infrastructure.messaging.external.api.EventPublisher
 import com.cordona.claudecodehooks.service.external.api.StopHookProcessor
-import com.cordona.claudecodehooks.service.internal.hooks.resolveProjectContext
 import com.cordona.claudecodehooks.shared.models.ClaudeHookEvent
 import com.cordona.claudecodehooks.shared.models.StopHook
 import org.springframework.stereotype.Service
+import java.time.Instant
+import java.util.*
 
 @Service
 class StopHookService(
@@ -14,9 +15,10 @@ class StopHookService(
 
 	override fun execute(target: StopHook) {
 		val claudeHookEvent = ClaudeHookEvent(
-			timestamp = target.metadata.timestamp,
-			message = STOP_HOOK_DEFAULT_MESSAGE,
-			projectContext = target.metadata.transcriptPath.resolveProjectContext()
+			id = UUID.randomUUID().toString(),
+			reason = STOP_HOOK_DEFAULT_MESSAGE,
+			timestamp = Instant.now().toString(),
+			contextWorkDirectory = target.contextWorkDirectory
 		)
 
 		eventPublisher.publish(claudeHookEvent)

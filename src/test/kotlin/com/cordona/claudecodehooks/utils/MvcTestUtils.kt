@@ -16,10 +16,15 @@ class MvcTestUtils {
 	fun assertIsOk(
 		endpoint: String,
 		payload: String,
+		headers: Map<String, String>
 	) {
 		val request = post(endpoint)
 			.contentType(APPLICATION_JSON)
 			.content(payload)
+
+		headers.forEach { (name, value) ->
+			request.header(name, value)
+		}
 
 		mockMvc
 			.perform(request)

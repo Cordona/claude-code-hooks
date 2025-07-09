@@ -71,7 +71,7 @@ export const CONFIG = {
         THEME: 'claude-hooks-theme',
         NOTIFICATIONS: 'claude-hooks-notifications',
         SETTINGS: 'claude-hooks-settings',
-        STATS: 'claude-hooks-stats'
+        STATS: 'claude-hooks-stats',
     },
 
     // Event Names
@@ -96,7 +96,7 @@ export const CONFIG = {
         NOTIFICATION_PERMISSION_DENIED: 'Browser notifications are blocked',
         AUDIO_CONTEXT_FAILED: 'Failed to initialize audio context',
         THEME_LOAD_FAILED: 'Failed to load theme preferences',
-        STORAGE_QUOTA_EXCEEDED: 'Storage quota exceeded'
+        STORAGE_QUOTA_EXCEEDED: 'Storage quota exceeded',
     },
 
     // Success Messages
@@ -104,7 +104,7 @@ export const CONFIG = {
         SSE_CONNECTED: 'Successfully connected to event stream',
         NOTIFICATION_PERMISSION_GRANTED: 'Browser notifications enabled',
         AUDIO_INITIALIZED: 'Audio system initialized',
-        THEME_APPLIED: 'Theme applied successfully'
+        THEME_APPLIED: 'Theme applied successfully',
     },
 
     // Animation Timings
@@ -157,7 +157,7 @@ export const CAPABILITIES = {
     INTERSECTION_OBSERVER: 'IntersectionObserver' in window,
     RESIZE_OBSERVER: 'ResizeObserver' in window,
     WEB_WORKERS: 'Worker' in window,
-    SERVICE_WORKERS: 'serviceWorker' in navigator
+    SERVICE_WORKERS: 'serviceWorker' in navigator,
 };
 
 // Device detection

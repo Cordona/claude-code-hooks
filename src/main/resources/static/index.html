@@ -129,6 +129,7 @@
             </ul>
         </div>
 
+
         <!-- Dropdown Menu -->
         <div class="dropdown-menu" id="dropdownMenu" role="menu" aria-hidden="true">
             <div class="dropdown-menu__section">
@@ -149,10 +150,6 @@
                 <button class="dropdown-menu__item dropdown-menu__item--clickable" role="menuitem" data-action="test-notification">
                     <span class="dropdown-menu__label">Test Notification</span>
                     <span class="dropdown-menu__shortcut">⌘T</span>
-                </button>
-                <button class="dropdown-menu__item dropdown-menu__item--clickable" role="menuitem" data-action="clear-notifications">
-                    <span class="dropdown-menu__label">Clear History</span>
-                    <span class="dropdown-menu__shortcut">⌘C</span>
                 </button>
             </div>
         </div>
@@ -327,6 +324,7 @@
                                 }
                             }
                             break;
+                            
                     }
                 });
             });
@@ -381,6 +379,7 @@
             
             // Set up SSE connection
             setupSSEConnection();
+            
         });
         
         // Audio Management
@@ -547,7 +546,7 @@
             // Show browser notification if permitted
             if ('Notification' in window && Notification.permission === 'granted') {
                 new Notification('🤖 Claude Code Hooks', {
-                    body: hookEvent.message,
+                    body: hookEvent.reason || hookEvent.message || 'Claude notification',
                     icon: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMCA5TDEzLjA5IDE1Ljc0TDEyIDIyTDEwLjkxIDE1Ljc0TDQgOUwxMC45MSA4LjI2TDEyIDJaIiBmaWxsPSIjNjY3ZWVhIi8+Cjwvc3ZnPgo=',
                     tag: 'claude-hook-' + (hookEvent.id || Date.now())
                 });
@@ -589,14 +588,26 @@
             }
             
             const notificationsHTML = notificationsData.map((notification, index) => {
-                const timestamp = new Date(notification.timestamp || Date.now());
+                const timestamp = new Date(notification.timestamp || notification.metadata?.timestamp || Date.now());
                 const timeStr = timestamp.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
                 const dateStr = timestamp.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                
+                // Create project path display from event data
+                const projectPath = notification.context_work_directory || notification.project_context || notification.projectContext;
+                const projectPathContent = projectPath 
+                    ? `<div class="notifications__project-path notifications__project-path--loaded">${projectPath}</div>`
+                    : '';
+                    
+                // Use reason consistently (fallback to message for backwards compatibility)
+                const message = notification.reason || notification.message || 'No message';
                 
                 return `
                     <div class="notifications__row" role="row">
                         <div class="notifications__cell notifications__cell--time" role="cell">${timeStr}</div>
-                        <div class="notifications__cell notifications__cell--message" role="cell">${notification.message || ''}</div>
+                        <div class="notifications__cell notifications__cell--message" role="cell">
+                            <div class="notifications__reason">${message}</div>
+                            ${projectPathContent}
+                        </div>
                         <div class="notifications__cell notifications__cell--date" role="cell">${dateStr}</div>
                         <div class="notifications__cell notifications__cell--actions" role="cell">
                             <button 
@@ -615,7 +626,9 @@
             }).join('');
             
             notificationsList.innerHTML = notificationsHTML;
+            
         }
+        
         
         function removeNotification(index) {
             notificationsData.splice(index, 1);
@@ -630,6 +643,7 @@
             }
         }
         
+
         // Make functions globally accessible
         window.removeNotification = removeNotification;
     </script>

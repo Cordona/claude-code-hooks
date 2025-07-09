@@ -1,6 +1,7 @@
 package com.cordona.claudecodehooks.web.internal.rest.hooks.notification.event
 
 import com.cordona.claudecodehooks.service.external.api.NotificationHookProcessor
+import com.cordona.claudecodehooks.web.internal.rest.hooks.common.HttpHeaderConstants.X_CONTEXT_WORK_DIRECTORY
 import com.cordona.claudecodehooks.web.internal.rest.hooks.common.extensions.bodyAs
 import com.cordona.claudecodehooks.web.internal.rest.hooks.notification.request.NotificationHookRequest
 import com.cordona.claudecodehooks.web.internal.rest.hooks.notification.request.toModel
@@ -19,7 +20,8 @@ class NotificationEventHandler(
 ) : HandlerFunction<ServerResponse> {
 
 	override fun handle(request: ServerRequest): ServerResponse {
-		val notificationHook = request.bodyAs<NotificationHookRequest>(objectMapper).toModel()
+		val workDirectory = request.headers().firstHeader(X_CONTEXT_WORK_DIRECTORY)
+		val notificationHook = request.bodyAs<NotificationHookRequest>(objectMapper).toModel(workDirectory)
 
 		notificationHookProcessor.execute(notificationHook)
 

@@ -1,7 +1,8 @@
 package com.cordona.claudecodehooks.shared.models
 
 data class ClaudeHookEvent(
+	val id: String,
+	val reason: String,
 	val timestamp: String,
-	val message: String,
-	val projectContext: String
+	val contextWorkDirectory: String?
 )

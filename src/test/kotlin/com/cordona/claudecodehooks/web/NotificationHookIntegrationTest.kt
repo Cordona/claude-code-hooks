@@ -12,7 +12,8 @@ class NotificationHookIntegrationTest : BaseWebTest() {
 
 		mvcTestUtils.assertIsOk(
 			endpoint = endpointProperties.claudeCode.hooks.notification.event,
-			payload = requestJson
+			payload = requestJson,
+			headers = mapOf("X-Context-Work-Directory" to "people-spheres-claude-code-custom-commands")
 		)
 
 		val hookEvents = sseClient.waitForEvents(DEFAULT_SSE_TIMEOUT, expectedCount = 1)
@@ -32,7 +33,8 @@ class NotificationHookIntegrationTest : BaseWebTest() {
 
 		mvcTestUtils.assertIsOk(
 			endpoint = endpointProperties.claudeCode.hooks.notification.event,
-			payload = requestJson
+			payload = requestJson,
+			headers = mapOf("X-Context-Work-Directory" to "people-spheres-claude-code-custom-commands")
 		)
 
 		val hookEvents = sseClient.waitForEvents(DEFAULT_SSE_TIMEOUT, expectedCount = 1)

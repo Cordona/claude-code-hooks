@@ -1,6 +1,7 @@
 package com.cordona.claudecodehooks.web.internal.rest.hooks.stop.event
 
 import com.cordona.claudecodehooks.service.external.api.StopHookProcessor
+import com.cordona.claudecodehooks.web.internal.rest.hooks.common.HttpHeaderConstants.X_CONTEXT_WORK_DIRECTORY
 import com.cordona.claudecodehooks.web.internal.rest.hooks.common.extensions.bodyAs
 import com.cordona.claudecodehooks.web.internal.rest.hooks.stop.request.StopHookRequest
 import com.cordona.claudecodehooks.web.internal.rest.hooks.stop.request.toModel
@@ -19,7 +20,8 @@ class StopEventHandler(
 ) : HandlerFunction<ServerResponse> {
 
 	override fun handle(request: ServerRequest): ServerResponse {
-		val stopHook = request.bodyAs<StopHookRequest>(objectMapper).toModel()
+		val workDirectory = request.headers().firstHeader(X_CONTEXT_WORK_DIRECTORY)
+		val stopHook = request.bodyAs<StopHookRequest>(objectMapper).toModel(workDirectory)
 
 		stopHookProcessor.execute(stopHook)
 

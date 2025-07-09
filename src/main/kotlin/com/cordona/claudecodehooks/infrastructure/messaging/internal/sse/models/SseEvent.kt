@@ -1,23 +1,20 @@
 package com.cordona.claudecodehooks.infrastructure.messaging.internal.sse.models
 
 import com.cordona.claudecodehooks.shared.models.ClaudeHookEvent
-import java.util.UUID
 
 data class SseEvent(
 	val id: String,
-	val message: String,
+	val reason: String,
 	val timestamp: String,
-	val projectContext: String,
+	val contextWorkDirectory: String?,
 ) {
 
 	companion object {
 		fun from(source: ClaudeHookEvent): SseEvent = SseEvent(
-			id = generateId(),
-			message = source.message,
+			id = source.id,
+			reason = source.reason,
 			timestamp = source.timestamp,
-			projectContext = source.projectContext
+			contextWorkDirectory = source.contextWorkDirectory
 		)
-
-		private fun generateId(): String = UUID.randomUUID().toString()
 	}
 }

@@ -12,9 +12,10 @@ data class NotificationHookRequest(
     val message: String
 )
 
-fun NotificationHookRequest.toModel(): NotificationHook {
+fun NotificationHookRequest.toModel(contextWorkDirectory: String?): NotificationHook {
     return NotificationHook(
         message = this.message,
+        contextWorkDirectory = contextWorkDirectory,
         metadata = HookMetadata(
             timestamp = Instant.now().toString(),
             hookType = HookType.fromValue(this.hookEventName),
