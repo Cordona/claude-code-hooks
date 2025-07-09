@@ -6,11 +6,11 @@ import org.springframework.boot.runApplication
 import org.springframework.modulith.Modulith
 import org.springframework.scheduling.annotation.EnableAsync
 
-@EnableAsync
 @Modulith
+@EnableAsync
 @StrictModulith
-@ConfigurationPropertiesScan
 @SpringBootApplication
+@ConfigurationPropertiesScan
 class Application
 
 fun main(args: Array<String>) {

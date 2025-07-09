@@ -22,7 +22,6 @@ class NotificationHookService(
 		eventPublisher.publish(claudeHookEvent)
 	}
 
-
 	private fun resolveMessage(message: String): String =
 		if (isPlanApprovalRequest(message)) "Claude Code plan is ready for review" else message
 

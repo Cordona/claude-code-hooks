@@ -27,6 +27,8 @@ This is a **Claude Code Hooks - Notification Service**, a cross-platform Spring 
 - **Run integration tests**: `./gradlew test --tests "*IntegrationTest"`
 - **Run modularity tests**: `./gradlew test --tests "*ModularityTest"`
 - **Run single test**: `./gradlew test --tests "NotificationHookIntegrationTest"`
+- **Run specific test class**: `./gradlew test --tests "StopHookIntegrationTest"`
+- **Run tests with detailed output**: `./gradlew test --info`
 
 ### Development Environment
 - **JDK**: 21+ required
@@ -34,6 +36,12 @@ This is a **Claude Code Hooks - Notification Service**, a cross-platform Spring 
 - **Main class**: `com.cordona.claudecodehooks.Application`
 - **Default port**: 8080 (development), 8085 (Docker)
 - **Dashboard URL**: `http://localhost:8080` (development), `http://localhost:8085` (Docker)
+
+### Environment Variables
+- **SERVICE_WEB_API_ROOT**: API root path (default: "api")
+- **SERVICE_WEB_API_VERSION**: API version (default: "v1")
+- **SSE_TIMEOUT_MILLIS**: SSE connection timeout in milliseconds (default: 0 = no timeout)
+- **SSE_MAX_CONNECTIONS**: Maximum concurrent SSE connections (default: 100)
 
 ### Key Configuration Files
 - **Application config**: `src/main/resources/application.yml`
@@ -185,6 +193,21 @@ Implement `EventPublisher` interface with conditional configuration:
 @ConditionalOnProperty("messaging.slack.enabled", havingValue = "true")
 class SlackEventPublisher : EventPublisher
 ```
+
+## Code Quality and Validation
+
+### Modulith Validation
+The application enforces **strict SpringModulith boundaries** at startup. Any module boundary violations will cause the application to fail to start with detailed error messages.
+
+- **Validation trigger**: Enabled via `service.modulith.strict.enabled=true`
+- **Enforcement**: `@StrictModulith` annotation on main application class
+- **Validation logic**: `ModulithValidator` component runs on `ContextRefreshedEvent`
+
+### Code Style
+- **Language**: Kotlin with null safety and immutability patterns
+- **Architecture**: Clean architecture with SpringModulith boundaries
+- **Async Processing**: Virtual Threads (JDK 21) for all async operations
+- **Configuration**: YAML-based configuration with environment variable support
 
 ## Success Metrics
 - **Audio Reliability**: 100% playbook success rate (resolved from "4/5 failures")
