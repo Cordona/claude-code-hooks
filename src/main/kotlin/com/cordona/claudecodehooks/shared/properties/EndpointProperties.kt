@@ -1,4 +1,4 @@
-package com.cordona.claudecodehooks.web.internal.properties
+package com.cordona.claudecodehooks.shared.properties
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 

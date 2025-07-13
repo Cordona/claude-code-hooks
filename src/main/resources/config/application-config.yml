@@ -3,6 +3,8 @@ server:
 spring:
   application:
     name: claude-code-hooks
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
   threads:
     virtual:
       enabled: true

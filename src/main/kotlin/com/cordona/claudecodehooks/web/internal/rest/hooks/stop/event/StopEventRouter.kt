@@ -1,6 +1,6 @@
 package com.cordona.claudecodehooks.web.internal.rest.hooks.stop.event
 
-import com.cordona.claudecodehooks.web.internal.properties.EndpointProperties
+import com.cordona.claudecodehooks.shared.properties.EndpointProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.servlet.function.RequestPredicates.POST

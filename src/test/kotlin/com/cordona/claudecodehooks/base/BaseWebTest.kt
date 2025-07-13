@@ -3,7 +3,7 @@ package com.cordona.claudecodehooks.base
 import com.cordona.claudecodehooks.utils.MvcTestUtils
 import com.cordona.claudecodehooks.utils.SseAssertions
 import com.cordona.claudecodehooks.utils.SseTestClient
-import com.cordona.claudecodehooks.web.internal.properties.EndpointProperties
+import com.cordona.claudecodehooks.shared.properties.EndpointProperties
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
