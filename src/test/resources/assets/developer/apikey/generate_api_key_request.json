@@ -1,0 +1,7 @@
+{
+  "name": "Test API Key",
+  "permissions": [
+    "hooks:write"
+  ],
+  "expiresAt": null
+}

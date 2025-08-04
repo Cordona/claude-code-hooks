@@ -1,0 +1,14 @@
+{
+  "apiKey": "IGNORE_FIELD",
+  "keyId": "IGNORE_FIELD",
+  "keyPrefix": "chk_1234567890...",
+  "lookupHash": "IGNORE_FIELD",
+  "createdAt": "IGNORE_FIELD",
+  "lastUsedAt": null,
+  "isActive": true,
+  "name": "Test API Key",
+  "permissions": [
+    "hooks:write"
+  ],
+  "expiresAt": null
+}

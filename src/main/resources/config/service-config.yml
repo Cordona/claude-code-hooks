@@ -1,0 +1,56 @@
+service:
+  modulith:
+    strict:
+      enabled: ${SERVICE_MODULITH_STRICT_ENABLED}
+  database:
+    provider: ${SERVICE_DATABASE_PROVIDER}
+  cache:
+    store: ${CACHE_STORE}
+  messaging:
+    server-sent-events:
+      timeout-millis: ${SERVER_SENT_EVENTS_TIMEOUT_MILLIS}
+      max-connections: ${SERVER_SENT_EVENTS_MAX_CONNECTIONS}
+      cache:
+        max-users: ${SSE_CACHE_MAX_USERS}
+        max-connections: ${SSE_CACHE_MAX_CONNECTIONS}
+      concurrency:
+        virtual-threads-limit: ${SSE_CONCURRENCY_VIRTUAL_THREADS_LIMIT}
+      heartbeat:
+        interval-seconds: ${SSE_HEARTBEAT_INTERVAL_SECONDS}
+        jitter-enabled: ${SSE_HEARTBEAT_JITTER_ENABLED}
+        timeout-seconds: ${SSE_HEARTBEAT_TIMEOUT_SECONDS}
+        event-type: ${SSE_HEARTBEAT_EVENT_TYPE}
+        max-failures: ${SSE_HEARTBEAT_MAX_FAILURES}
+  security:
+    cors:
+      max-age-seconds: ${CORS_MAX_AGE_SECONDS}
+      allow-credentials: ${CORS_ALLOW_CREDENTIALS}
+      allowed-headers: ${CORS_ALLOWED_HEADERS}
+      allowed-methods: ${CORS_ALLOWED_METHODS}
+      allowed-origins: ${CORS_ALLOWED_ORIGINS}
+      enabled-paths: ${CORS_ENABLED_PATHS}
+  web:
+    api:
+      base: "/api/v1"
+    endpoints:
+      actuator:
+        base: "/actuator"
+        health: "${service.web.endpoints.actuator.base}/health"
+        info: "${service.web.endpoints.actuator.base}/info"
+      claude-code:
+        base: "${service.web.api.base}/claude-code"
+        hooks:
+          base: "${service.web.endpoints.claude-code.base}/hooks"
+          notification:
+            event: "${service.web.endpoints.claude-code.hooks.base}/notification/event"
+          stop:
+            event: "${service.web.endpoints.claude-code.hooks.base}/stop/event"
+          events:
+            stream:
+              connect: "${service.web.endpoints.claude-code.hooks.base}/events/stream/connect"
+              disconnect: "${service.web.endpoints.claude-code.hooks.base}/events/stream/disconnect"
+        user:
+          initialize: "${service.web.endpoints.claude-code.base}/user/initialize"
+        developer:
+          api-key:
+            generate: "${service.web.endpoints.claude-code.base}/developer/api-key/generate"

@@ -1,0 +1,20 @@
+server:
+  port: ${SERVER_PORT}
+spring:
+  application:
+    name: claude-code-hooks
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE}
+  main:
+    keep-alive: true
+  threads:
+    virtual:
+      enabled: true
+management:
+  endpoint:
+    health:
+      show-details: ${MANAGEMENT_HEALTH_SHOW_DETAILS}
+logging:
+  level:
+    root: ${APPLICATION_LOG_LEVEL_ROOT:INFO}
+    com.cordona.claudecodehooks: ${APPLICATION_LOG_LEVEL_CLAUDECODEHOOKS:DEBUG}

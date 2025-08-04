@@ -1,0 +1,7 @@
+spring:
+  config:
+    import:
+      - "classpath:config/application-config.yml"
+      - "classpath:config/service-config.yml"
+      - "classpath:config/persistence-config.yml"
+      - "classpath:config/security-config.yml"

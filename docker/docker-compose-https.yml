@@ -1,0 +1,180 @@
+version: "3.9"
+
+services:
+  # PostgreSQL Database for Keycloak
+  postgresql:
+    image: postgres:16
+    container_name: postgresql-keycloak
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${KEYCLOAK_DB_NAME}
+      POSTGRES_USER: ${KEYCLOAK_DB_USER}
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${KEYCLOAK_DB_USER} -d ${KEYCLOAK_DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    ports:
+      - "${KEYCLOAK_DB_PORT}:5432"
+    volumes:
+      - keycloak_postgresql_data:/var/lib/postgresql/data
+    networks:
+      - claude-code-hooks-network
+
+  # Keycloak Authentication Server
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: keycloak-auth-server
+    restart: unless-stopped
+    command: start
+    environment:
+      # Keycloak Admin
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN_USER}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      
+      # Database Configuration
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgresql:5432/${KEYCLOAK_DB_NAME}
+      KC_DB_USERNAME: ${KEYCLOAK_DB_USER}
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      
+      # HTTPS Configuration
+      KC_HTTPS_CERTIFICATE_FILE: /opt/keycloak/certs/localhost+3.pem
+      KC_HTTPS_CERTIFICATE_KEY_FILE: /opt/keycloak/certs/localhost+3-key.pem
+      KC_HTTPS_PORT: 8443
+      KC_HOSTNAME: ${KEYCLOAK_HOSTNAME}
+      KC_HOSTNAME_STRICT: "false"
+
+      # Health and Management
+      KC_HEALTH_ENABLED: "true"
+      KC_METRICS_ENABLED: "true"
+      
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/9000 && exit 0 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    ports:
+      - "${KEYCLOAK_HTTPS_PORT}:8443"
+      - "9000:9000"
+    volumes:
+      - ../.secrets/certs:/opt/keycloak/certs:ro
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    networks:
+      - claude-code-hooks-network
+
+  # MongoDB Database for Application Data
+  mongodb:
+    image: mongo:8.0
+    container_name: mongodb-claude-code-hooks
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    ports:
+      - "${MONGO_PORT}:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    networks:
+      - claude-code-hooks-network
+
+  # Claude Code Hooks Application
+  claude-code-hooks:
+    profiles: ["app"]
+    container_name: claude-code-hooks
+    image: claude-code-hooks:latest
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    ports:
+      - "${SERVER_PORT}:${SERVER_PORT}"
+    environment:
+      # Spring profiles
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      
+      # Application configuration
+      SERVER_PORT: ${SERVER_PORT}
+      SERVICE_MODULITH_STRICT_ENABLED: ${SERVICE_MODULITH_STRICT_ENABLED}
+      SERVER_SENT_EVENTS_TIMEOUT_MILLIS: ${SERVER_SENT_EVENTS_TIMEOUT_MILLIS}
+      SERVER_SENT_EVENTS_MAX_CONNECTIONS: ${SERVER_SENT_EVENTS_MAX_CONNECTIONS}
+      SERVICE_DATABASE_PROVIDER: ${SERVICE_DATABASE_PROVIDER}
+      
+      # Global Cache Configuration
+      CACHE_STORE: ${CACHE_STORE}
+      
+      # SSE Cache Configuration
+      SSE_CACHE_MAX_USERS: ${SSE_CACHE_MAX_USERS}
+      SSE_CACHE_MAX_CONNECTIONS: ${SSE_CACHE_MAX_CONNECTIONS}
+      
+      # SSE Concurrency Configuration
+      SSE_CONCURRENCY_VIRTUAL_THREADS_LIMIT: ${SSE_CONCURRENCY_VIRTUAL_THREADS_LIMIT}
+      
+      # SSE Heartbeat Configuration
+      SSE_HEARTBEAT_INTERVAL_SECONDS: ${SSE_HEARTBEAT_INTERVAL_SECONDS}
+      SSE_HEARTBEAT_JITTER_ENABLED: ${SSE_HEARTBEAT_JITTER_ENABLED}
+      SSE_HEARTBEAT_TIMEOUT_SECONDS: ${SSE_HEARTBEAT_TIMEOUT_SECONDS}
+      SSE_HEARTBEAT_EVENT_TYPE: ${SSE_HEARTBEAT_EVENT_TYPE}
+      SSE_HEARTBEAT_MAX_FAILURES: ${SSE_HEARTBEAT_MAX_FAILURES}
+      
+      # MongoDB configuration
+      MONGO_HOST: ${MONGO_HOST}
+      MONGO_PORT: ${MONGO_PORT}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_AUTHENTICATION_DATABASE: ${MONGO_AUTHENTICATION_DATABASE}
+      MONGO_AUTO_INDEX_CREATION: ${MONGO_AUTO_INDEX_CREATION}
+      
+      # Keycloak OAuth2 Resource Server Configuration
+      KEYCLOAK_ISSUER_URI: ${KEYCLOAK_ISSUER_URI}
+      
+      # CORS Configuration
+      CORS_MAX_AGE_SECONDS: ${CORS_MAX_AGE_SECONDS}
+      CORS_ALLOW_CREDENTIALS: ${CORS_ALLOW_CREDENTIALS}
+      CORS_ALLOWED_HEADERS: ${CORS_ALLOWED_HEADERS}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      CORS_ALLOWED_METHODS: ${CORS_ALLOWED_METHODS}
+      CORS_ENABLED_PATHS: ${CORS_ENABLED_PATHS}
+
+      # Management & Monitoring
+      MANAGEMENT_HEALTH_SHOW_DETAILS: ${MANAGEMENT_HEALTH_SHOW_DETAILS}
+      
+      # Logging Configuration
+      APPLICATION_LOG_LEVEL_ROOT: ${APPLICATION_LOG_LEVEL_ROOT}
+      APPLICATION_LOG_LEVEL_CLAUDECODEHOOKS: ${APPLICATION_LOG_LEVEL_CLAUDECODEHOOKS}
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:${SERVER_PORT}/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - claude-code-hooks-network
+
+volumes:
+  keycloak_postgresql_data:
+    driver: local
+  mongodb_data:
+    driver: local
+  mongodb_config:
+    driver: local
+
+networks:
+  claude-code-hooks-network:
+    driver: bridge
