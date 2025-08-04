@@ -3,6 +3,7 @@ package com.cordona.claudecodehooks.infrastructure.internal.messaging.sse.heartb
 import com.cordona.claudecodehooks.infrastructure.internal.messaging.sse.caching.ConnectionStore
 import com.cordona.claudecodehooks.infrastructure.internal.messaging.sse.connection.SseConnectionManager
 import com.cordona.claudecodehooks.infrastructure.internal.messaging.sse.properties.SseProperties
+import com.cordona.claudecodehooks.infrastructure.internal.messaging.sse.properties.SseProperties.HeartbeatProperties.HeartbeatEventType.COMMENT
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
@@ -25,28 +26,34 @@ class SseHeartbeatService(
 
 		val result = HeartbeatCycleResult()
 
-		activeConnections.forEach { (metadata, emitter) ->
+		activeConnections.forEach { (connection, emitter) ->
 			val jitterDelay = calculateJitterDelay()
-			val heartbeatEvent = HeartbeatEvent.Companion.create(
-				connectionId = metadata.connectionId,
-				userExternalId = metadata.userExternalId
-			)
 
 			if (jitterDelay > ZERO_COUNT) {
 				Thread.sleep(jitterDelay)
 			}
 
+			val heartbeatEvent = HeartbeatEvent.Companion.create(
+				connectionId = connection.connectionId,
+				userExternalId = connection.userExternalId
+			)
+
 			val heartbeatResult = sendHeartbeatToConnection(heartbeatEvent, emitter)
 
 			if (heartbeatResult.success) {
 				result.recordSuccess()
-				logger.trace { "Heartbeat delivered to connection with ID ${metadata.connectionId} in ${heartbeatResult.deliveryTimeMs}ms" }
+				val updatedConnection = connection.recordSuccess()
+				connectionStore.updateConnectionHealth(connection.connectionId, updatedConnection)
+				logger.trace { "Heartbeat delivered to connection with ID ${connection.connectionId} in ${heartbeatResult.deliveryTimeMs}ms" }
 			} else {
 				result.recordFailure()
-				logger.warn { "Heartbeat failed for connection with ID ${metadata.connectionId}: ${heartbeatResult.error}" }
+				val updatedConnection = connection.recordFailure()
+				connectionStore.updateConnectionHealth(connection.connectionId, updatedConnection)
+				logger.warn { "Heartbeat failed for connection with ID ${connection.connectionId}: ${heartbeatResult.error}" }
 
-				if (isStaleConnectionError(heartbeatResult.error)) {
-					result.addStaleConnection(metadata.connectionId)
+				if (updatedConnection.isUnhealthy(sseProperties.heartbeat.maxFailures)) {
+					result.addStaleConnection(connection.connectionId)
+					logger.info { "Connection with ID ${connection.connectionId} marked as stale after ${updatedConnection.health.getConsecutiveFailures()} consecutive failures" }
 				}
 			}
 		}
@@ -69,7 +76,7 @@ class SseHeartbeatService(
 
 		return try {
 			when (sseProperties.heartbeat.eventType) {
-				SseProperties.HeartbeatProperties.HeartbeatEventType.COMMENT -> {
+				COMMENT -> {
 					emitter.send(SseEmitter.event().comment(HEARTBEAT_COMMENT))
 				}
 			}
@@ -101,20 +108,9 @@ class SseHeartbeatService(
 		}
 	}
 
-	private fun isStaleConnectionError(errorMessage: String?): Boolean {
-		return errorMessage?.let { message ->
-			STALE_CONNECTION_ERROR_KEYWORDS.any { keyword -> message.contains(keyword) }
-		} ?: false
-	}
-
 	companion object {
 		private const val HEARTBEAT_COMMENT = "heartbeat"
 		private const val NO_JITTER_DELAY = 0L
 		private const val ZERO_COUNT = 0
-		private val STALE_CONNECTION_ERROR_KEYWORDS = listOf(
-			"IOException",
-			"IllegalStateException",
-			"broken"
-		)
 	}
 }

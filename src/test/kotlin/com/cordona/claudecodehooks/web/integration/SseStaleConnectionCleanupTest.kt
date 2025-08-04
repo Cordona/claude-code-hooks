@@ -30,9 +30,9 @@ class SseStaleConnectionCleanupTest : BaseHeartbeatTest() {
 		val initialCacheSize = connectionStore.getConnectionsCount()
 		simulateConnectionDeath(connectionsToKill)
 
-		// Wait for a heartbeat system to detect and clean up stale connections
-		// Multiple heartbeat cycles should occur to trigger cleanup
-		Thread.sleep(Duration.ofSeconds(2).toMillis())
+		// Wait for the heartbeat system to detect and clean up stale connections
+		// With maxFailures=3 and 1s intervals, need at least 4 seconds for cleanup
+		Thread.sleep(Duration.ofSeconds(5).toMillis())
 
 		// Then: Healthy connections continue receiving heartbeats
 		val healthyConnections = allConnections - connectionsToKill.toSet()
@@ -68,8 +68,9 @@ class SseStaleConnectionCleanupTest : BaseHeartbeatTest() {
 
 		simulateConnectionDeath(deadConnections)
 
-		// Wait for cleanup detection
-		Thread.sleep(Duration.ofSeconds(2).toMillis())
+		// Wait for the heartbeat system to detect and clean up stale connections
+		// With maxFailures=3 and 1s intervals, need at least 4 seconds for cleanup
+		Thread.sleep(Duration.ofSeconds(5).toMillis())
 
 		// Then: Healthy connections continue receiving heartbeats
 		val healthyConnections = allConnections - deadConnections.toSet()
