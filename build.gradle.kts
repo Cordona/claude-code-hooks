@@ -26,13 +26,17 @@ val springModulithGroupId = "org.springframework.modulith"
 dependencies {
     implementation(libs.bundles.spring.boot)
     implementation(libs.bundles.spring.modulith)
+    implementation(libs.bundles.persistence)
+    implementation(libs.bundles.security)
     implementation(libs.kotlin.logging)
+    implementation(libs.caffeine)
     testImplementation(libs.bundles.testing)
 }
 
 dependencyManagement {
     imports {
         mavenBom("$springModulithGroupId:spring-modulith-bom:${libs.versions.springModulith.get()}")
+        mavenBom("org.testcontainers:testcontainers-bom:${libs.versions.testcontainers.get()}")
     }
 }
 
@@ -70,18 +74,18 @@ tasks.register<Exec>("dockerBuild") {
     group = "docker"
     description = "Build Docker image using traditional Dockerfile"
     dependsOn("bootJar")
-    commandLine("docker", "build", "-t", "claude-code-hooks:latest", ".")
+    commandLine("/usr/local/bin/docker", "build", "-t", "claude-code-hooks:latest", ".")
 }
 
 tasks.register<Exec>("dockerUp") {
     group = "docker"
     description = "Build and start the application using Docker Compose"
     dependsOn("dockerBuild")
-    commandLine("docker", "compose", "up", "-d")
+    commandLine("/usr/local/bin/docker", "compose", "up", "-d")
 }
 
 tasks.register<Exec>("dockerDown") {
     group = "docker"
     description = "Stop and remove Docker containers"
-    commandLine("docker", "compose", "down")
+    commandLine("/usr/local/bin/docker", "compose", "down")
 }

@@ -1,8 +1,9 @@
 package com.cordona.claudecodehooks.utils
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.springframework.http.HttpHeaders
-import org.springframework.http.MediaType
+import org.springframework.http.HttpHeaders.ACCEPT
+import org.springframework.http.HttpHeaders.CACHE_CONTROL
+import org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE
 import org.springframework.web.client.RestClient
 import java.io.BufferedReader
 import java.io.Closeable
@@ -14,15 +15,37 @@ import kotlin.concurrent.thread
 class SseTestClient(
 	private val restClient: RestClient,
 	private val sseEndpoint: String,
+	private val authHeaders: Map<String, String> = emptyMap(),
+	private val sseAssertions: SseAssertions? = null
 ) : Closeable {
 	private val logger = KotlinLogging.logger {}
 	private val events = ConcurrentLinkedQueue<String>()
+	private val connectionEvents = ConcurrentLinkedQueue<String>()
+	private val heartbeats = ConcurrentLinkedQueue<String>()
 	private val isRunning = AtomicBoolean(false)
 	private val isConnected = AtomicBoolean(false)
 	private var clientThread: Thread? = null
 
 	companion object {
 		const val LOCALHOST_BASE_URL = "http://localhost"
+		
+		fun create(
+			serverPort: Int,
+			sseEndpoint: String,
+			restClientBuilder: RestClient.Builder,
+			sseAssertions: SseAssertions,
+			authHeaders: Map<String, String> = emptyMap()
+		): SseTestClient {
+			val baseUrl = "$LOCALHOST_BASE_URL:$serverPort"
+			val restClient = restClientBuilder.baseUrl(baseUrl).build()
+			
+			return SseTestClient(
+				restClient = restClient,
+				sseEndpoint = sseEndpoint,
+				authHeaders = authHeaders,
+				sseAssertions = sseAssertions
+			)
+		}
 	}
 
 	fun start() {
@@ -43,6 +66,17 @@ class SseTestClient(
 	}
 
 	override fun close() = stop()
+
+	fun setupAndStart() {
+		start()
+		sseAssertions?.assertConnectionEstablished(this)
+	}
+
+	fun stopSafely() {
+		if (isRunning.get()) {
+			stop()
+		}
+	}
 
 	fun waitForConnection(timeout: Duration = Duration.ofSeconds(5)): Boolean {
 		val startTime = System.currentTimeMillis()
@@ -66,22 +100,55 @@ class SseTestClient(
 		return events.take(expectedCount)
 	}
 
+	fun waitForConnectionEvents(timeout: Duration, expectedCount: Int = 1): List<String> {
+		val startTime = System.currentTimeMillis()
+
+		while (System.currentTimeMillis() - startTime < timeout.toMillis()) {
+			if (connectionEvents.size >= expectedCount) {
+				return connectionEvents.take(expectedCount)
+			}
+			Thread.sleep(50)
+		}
+
+		logger.warn { "Timeout waiting for $expectedCount connection events. Got ${connectionEvents.size} events in $timeout" }
+		return connectionEvents.take(expectedCount)
+	}
+
+	fun waitForHeartbeats(timeout: Duration, expectedCount: Int = 1): List<String> {
+		val startTime = System.currentTimeMillis()
+
+		while (System.currentTimeMillis() - startTime < timeout.toMillis()) {
+			if (heartbeats.size >= expectedCount) {
+				return heartbeats.take(expectedCount)
+			}
+			Thread.sleep(50)
+		}
+
+		logger.warn { "Timeout waiting for $expectedCount heartbeats. Got ${heartbeats.size} heartbeats in $timeout" }
+		return heartbeats.take(expectedCount)
+	}
+
 	private fun connectAndListen() {
 		runCatching {
-			restClient
+			val requestSpec = restClient
 				.get()
 				.uri(sseEndpoint)
-				.header(HttpHeaders.ACCEPT, MediaType.TEXT_EVENT_STREAM_VALUE)
-				.header(HttpHeaders.CACHE_CONTROL, "no-cache")
-				.exchange { _, response ->
-					isConnected.set(true)
-					logger.debug { "SSE connection established" }
-					response.body.use { inputStream ->
-						inputStream.bufferedReader().use { reader ->
-							parseEventStreamRealTime(reader)
-						}
+				.header(ACCEPT, TEXT_EVENT_STREAM_VALUE)
+				.header(CACHE_CONTROL, "no-cache")
+
+			authHeaders.forEach { (name, value) ->
+				requestSpec.header(name, value)
+			}
+
+			requestSpec.exchange { _, response ->
+				isConnected.set(true)
+				logger.debug { "SSE connection established" }
+				response.body.use { inputStream ->
+					inputStream.bufferedReader().use { reader ->
+						parseEventStreamRealTime(reader)
 					}
 				}
+			}
 		}.onFailure { e ->
 			when (e) {
 				is InterruptedException -> logger.debug { "SSE client interrupted" }
@@ -99,6 +166,16 @@ class SseTestClient(
 			logger.debug { "SSE client received line: '$line'" }
 
 			when {
+				line.startsWith(":") -> {
+					val comment = line.substringAfter(":").trim()
+					if (comment == "heartbeat") {
+						heartbeats.offer(comment)
+						logger.debug { "Captured heartbeat comment" }
+					} else {
+						logger.debug { "Ignoring comment: $comment" }
+					}
+				}
+
 				line.startsWith("event:") -> {
 					eventName = line.substringAfter("event:").trim()
 				}
@@ -108,11 +185,18 @@ class SseTestClient(
 				}
 
 				line.isEmpty() && eventName != null && eventData != null -> {
-					if (eventName == "claude-hook") {
-						events.offer(eventData)
-						logger.info { "Captured claude-hook event data: $eventData" }
-					} else {
-						logger.debug { "Ignoring event: $eventName" }
+					when (eventName) {
+						"claude-hook" -> {
+							events.offer(eventData)
+							logger.info { "Captured claude-hook event data: $eventData" }
+						}
+						"connected" -> {
+							connectionEvents.offer(eventData)
+							logger.info { "Captured connection event data: $eventData" }
+						}
+						else -> {
+							logger.debug { "Ignoring event: $eventName" }
+						}
 					}
 
 					eventName = null

@@ -1,6 +1,8 @@
 {
   "id": "IGNORE_FIELD",
+  "hookType": "stop",
   "reason": "Continue your claude session",
   "timestamp": "IGNORE_FIELD",
-  "context_work_directory": "people-spheres-claude-code-custom-commands"
+  "contextWorkDirectory": "/Users/cordona/IdeaProjects/cordona/claude-code-hooks",
+  "userExternalId": "00000000-0000-0000-0000-000000000001"
 }

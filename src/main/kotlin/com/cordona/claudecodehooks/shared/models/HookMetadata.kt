@@ -7,4 +7,5 @@ data class HookMetadata(
     val hookType: HookType,
     val sessionId: String,
     val transcriptPath: String,
+    val userExternalId: String,
 )

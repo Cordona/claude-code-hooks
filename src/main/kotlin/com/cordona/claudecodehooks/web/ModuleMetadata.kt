@@ -9,8 +9,11 @@ import org.springframework.modulith.PackageInfo
 		"shared::enums",
 		"shared::models",
 		"shared::properties",
-		"service::api",
-		"infrastructure::api"
+		"shared::exceptions",
+		"shared::commands",
+		"domain::api",
+		"infrastructure::api",
+		"security::api"
 	]
 )
 @PackageInfo

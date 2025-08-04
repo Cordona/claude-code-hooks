@@ -78,6 +78,10 @@ source_config() {
   export CLAUDE_HOOKS_SILENT_ERRORS=$(jq -r '.errorHandling.silentErrors' "$config_file")
   export CLAUDE_HOOKS_DEBUG=$(jq -r '.debug.enabled' "$config_file")
   
+  # Load and export API key for authentication
+  export CLAUDE_HOOKS_API_KEY=$(extract_api_key_from_config "$config_file" "API key" "true")
+  log_debug "API key loaded: $(mask_api_key "$CLAUDE_HOOKS_API_KEY")"
+  
   log_debug "JSON configuration loaded from: $config_file"
 }
 
@@ -142,4 +146,69 @@ retry_with_backoff() {
     delay=$((delay * 2))  # Exponential backoff
     ((attempt++))
   done
+}
+
+# Mask API key for secure display (show first 10 chars + "...")
+mask_api_key() {
+  local api_key="$1"
+  
+  if [[ -z "$api_key" || "$api_key" == "null" ]]; then
+    echo "(not set)"
+    return
+  fi
+  
+  if [[ ${#api_key} -le 10 ]]; then
+    echo "$api_key"
+  else
+    echo "${api_key:0:10}..."
+  fi
+}
+
+# Validate API key format (must start with chk_ and have minimum length)
+validate_api_key_format() {
+  local api_key="$1"
+  local description="${2:-API key}"
+  
+  if [[ -z "$api_key" ]]; then
+    die "$description cannot be empty"
+  fi
+  
+  if [[ ! "$api_key" =~ ^chk_ ]]; then
+    die "$description must start with 'chk_' prefix"
+  fi
+  
+  if [[ ${#api_key} -lt 15 ]]; then
+    die "$description is too short (minimum 15 characters required)"
+  fi
+  
+  # Validate allowed characters (alphanumeric, underscore, hyphen, period)
+  if [[ ! "$api_key" =~ ^[a-zA-Z0-9_.-]+$ ]]; then
+    die "$description contains invalid characters (only letters, numbers, underscore, hyphen, and period allowed)"
+  fi
+  
+  log_debug "$description format validation: passed"
+}
+
+# Extract API key from JSON configuration with validation
+extract_api_key_from_config() {
+  local config_file="$1"
+  local description="${2:-API key}"
+  local required="${3:-true}"
+  
+  check_file_exists "$config_file" "Configuration file"
+  check_dependency "jq" "apt-get install jq or brew install jq"
+  
+  local api_key
+  api_key=$(jq -r '.authentication.apiKey // empty' "$config_file")
+  
+  if [[ "$required" == "true" && ( -z "$api_key" || "$api_key" == "null" ) ]]; then
+    die "$description not found in configuration file: $config_file"
+  fi
+  
+  if [[ -n "$api_key" && "$api_key" != "null" ]]; then
+    validate_api_key_format "$api_key" "$description"
+    log_debug "$description extracted and validated from config"
+  fi
+  
+  echo "$api_key"
 }

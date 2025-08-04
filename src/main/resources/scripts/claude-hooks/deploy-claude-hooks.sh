@@ -14,6 +14,8 @@ source "$SCRIPT_DIR/lib/logging.sh"
 source "$SCRIPT_DIR/lib/config-manager.sh"
 # shellcheck source=lib/json-utils.sh
 source "$SCRIPT_DIR/lib/json-utils.sh"
+# shellcheck source=lib/utils.sh
+source "$SCRIPT_DIR/lib/utils.sh"
 
 # Common variables (SUCCESS and FAILURE come from logging.sh)
 YES="yes"
@@ -25,6 +27,7 @@ MAX_RETRIES=3
 
 # Configuration variables
 SERVICE_ENDPOINT=""
+SERVICE_API_KEY=""
 DEPLOYMENT_TARGET=""
 HOOK_CHOICE=""
 CLAUDE_CONFIG_DIR=""
@@ -38,6 +41,7 @@ main() {
   detect_claude_config_path
   check_dependencies
   prompt_for_service_endpoint
+  prompt_for_api_key
   prompt_for_deployment_target
   prompt_for_hook_selection
   backup_existing_config
@@ -55,7 +59,7 @@ print_info_section() {
   log_info "This script will:"
   log_info "  - Deploy modular hook scripts to your chosen location"
   log_info "  - Configure Claude settings.json with script paths"
-  log_info "  - Generate hooks-config.json with your service endpoint"
+  log_info "  - Generate hooks-config.json with your service endpoint and API key"
   log_info "  - Preserve existing hooks while adding new functionality"
   echo
 }
@@ -317,6 +321,63 @@ prompt_for_hook_selection() {
   done
 }
 
+# Prompt for API key configuration
+prompt_for_api_key() {
+  local retries=0
+  local user_api_key=""
+  
+  echo
+  log_info "API Key Configuration"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo "The Claude Code Hooks service requires an API key for authentication."
+  echo "You can generate an API key by:"
+  echo "  1. Starting your Claude Code Hooks service"
+  echo "  2. Visiting the service endpoint in your browser"
+  echo "  3. Using the API key generation feature"
+  echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo
+  
+  while [[ $retries -lt $MAX_RETRIES ]]; do
+    read -rp "Enter your API key (starts with 'chk_'): " user_api_key
+    
+    if [[ -z "$user_api_key" ]]; then
+      log_error "API key cannot be empty"
+      ((retries++))
+      continue
+    fi
+    
+    # Validate API key format using our utility function
+    if validate_api_key_format "$user_api_key" "API key" 2>/dev/null; then
+      log_info "API key format validation: passed"
+      log_info "API key to be configured: $(mask_api_key "$user_api_key")"
+      echo
+      read -rp "Is this API key correct? [y/N]: " confirm
+      
+      case "$confirm" in
+        y|Y|yes|YES)
+          SERVICE_API_KEY="$user_api_key"
+          log_success "API key configured successfully"
+          return 0
+          ;;
+        *)
+          log_info "Please re-enter your API key"
+          ((retries++))
+          continue
+          ;;
+      esac
+    else
+      log_error "Invalid API key format. API key must:"
+      log_error "  - Start with 'chk_' prefix"
+      log_error "  - Be at least 15 characters long"
+      log_error "  - Contain only valid characters"
+      ((retries++))
+    fi
+  done
+  
+  log_error "Maximum retries reached for API key input. Exiting..."
+  exit "$FAILURE"
+}
+
 # Backup existing configuration
 backup_existing_config() {
   if [[ -f "$CLAUDE_CONFIG_FILE" ]]; then
@@ -369,25 +430,49 @@ generate_hooks_config() {
   log_detail "Target configuration file: $config_file"
   
   # Prepare configuration values
-  declare -A config_values
-  config_values["base_url"]="$SERVICE_ENDPOINT"
-  config_values["base_path"]="/api/v1/claude-code/hooks"
-  config_values["timeout"]="10"
-  config_values["silent_errors"]="true"
-  config_values["debug_enabled"]="false"
+  local base_url="$SERVICE_ENDPOINT"
+  local api_key="$SERVICE_API_KEY"
+  local base_path="/api/v1/claude-code/hooks"
+  local timeout="10"
+  local silent_errors="true"
+  local debug_enabled="false"
   
-  log_detail "Using service endpoint: ${config_values[base_url]}"
-  log_detail "Using API base path: ${config_values[base_path]}"
+  log_detail "Using service endpoint: $base_url"
+  log_detail "Using API key: $(mask_api_key "$api_key")"
+  log_detail "Using API base path: $base_path"
   
-  # Generate configuration using shared function
-  if ! generate_hooks_config_file "$config_file" config_values; then
-    log_error "Failed to generate hooks configuration"
-    exit 1
-  fi
-  
+  # Generate configuration JSON directly for Bash 3.2 compatibility
+  cat > "$config_file" << EOF
+{
+  "service": {
+    "baseUrl": "$base_url"
+  },
+  "authentication": {
+    "apiKey": "$api_key"
+  },
+  "api": {
+    "basePath": "$base_path",
+    "endpoints": {
+      "notification": "/notification/event",
+      "stop": "/stop/event",
+      "events": "/events/stream"
+    }
+  },
+  "timeout": {
+    "seconds": $timeout
+  },
+  "errorHandling": {
+    "silentErrors": $silent_errors
+  },
+  "debug": {
+    "enabled": $debug_enabled
+  }
+}
+EOF
+
   # Validate generated configuration
-  if ! validate_json_schema "$(cat "$config_file")" "hooks-config"; then
-    log_error "Generated configuration failed validation"
+  if ! jq empty "$config_file" &> /dev/null; then
+    log_error "Generated configuration contains invalid JSON"
     exit 1
   fi
   
@@ -616,11 +701,17 @@ display_completion_message() {
   echo
   log_info "Deployment Summary:"
   log_info "  - Service endpoint: $SERVICE_ENDPOINT"
+  log_info "  - API key configured: $(mask_api_key "$SERVICE_API_KEY")"
   log_info "  - Deployment target: $DEPLOYMENT_TARGET ($SCRIPTS_TARGET_DIR)"
   log_info "  - Hooks installed: $HOOK_CHOICE"
   log_info "  - Configuration file: $CLAUDE_CONFIG_FILE"
   echo
   log_info "Your Claude Code hooks will now display actual project paths in notifications!"
+  echo
+  log_info "🔒 Security Reminder:"
+  log_info "  - Your API key is stored locally in hooks-config.json"
+  log_info "  - Keep your API key secure and do not share it"
+  log_info "  - You can update your API key using: ./update-claude-hooks-config.sh --api-key NEW_KEY"
   echo
 }
 

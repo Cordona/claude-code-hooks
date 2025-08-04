@@ -6,7 +6,12 @@ import org.springframework.modulith.PackageInfo
 @ApplicationModule(
 	displayName = "Security Layer",
 	allowedDependencies = [
-		"shared::properties"
+		"shared::properties",
+		"shared::models", 
+		"shared::enums",
+		"shared::exceptions",
+		"shared::utils",
+		"persistence::api"
 	]
 )
 @PackageInfo

@@ -61,5 +61,8 @@ target/
 # Environment configuration files
 .env/
 
+# Secrets
+.secrets
+
 # Claude Code artifacts
 .claude/
