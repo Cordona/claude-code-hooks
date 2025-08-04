@@ -2,9 +2,9 @@ package com.cordona.claudecodehooks.infrastructure.internal.messaging.sse.heartb
 
 data class HeartbeatEvent(
 	val connectionId: String,
-	val userExternalId: String
+	val userExternalId: String,
 ) {
-	
+
 	companion object {
 		fun create(connectionId: String, userExternalId: String): HeartbeatEvent =
 			HeartbeatEvent(

@@ -5,9 +5,9 @@ data class HeartbeatResult(
 	val userExternalId: String,
 	val success: Boolean,
 	val error: String? = null,
-	val deliveryTimeMs: Long
+	val deliveryTimeMs: Long,
 ) {
-	
+
 	companion object {
 		fun success(connectionId: String, userExternalId: String, deliveryTimeMs: Long): HeartbeatResult =
 			HeartbeatResult(
@@ -17,8 +17,13 @@ data class HeartbeatResult(
 				error = null,
 				deliveryTimeMs = deliveryTimeMs
 			)
-		
-		fun failure(connectionId: String, userExternalId: String, error: String, deliveryTimeMs: Long): HeartbeatResult =
+
+		fun failure(
+			connectionId: String,
+			userExternalId: String,
+			error: String,
+			deliveryTimeMs: Long,
+		): HeartbeatResult =
 			HeartbeatResult(
 				connectionId = connectionId,
 				userExternalId = userExternalId,

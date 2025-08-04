@@ -2,5 +2,5 @@ package com.cordona.claudecodehooks.infrastructure.internal.messaging.sse.connec
 
 data class ConnectionDetails(
 	val connectionId: String,
-	val userExternalId: String
+	val userExternalId: String,
 )

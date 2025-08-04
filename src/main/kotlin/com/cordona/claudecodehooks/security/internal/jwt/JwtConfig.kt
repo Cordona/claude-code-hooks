@@ -28,29 +28,30 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
 @Configuration
 @ConditionalOnProperty("spring.profiles.active", havingValue = "docker")
 class JwtConfig(
-    private val properties: OAuth2ResourceServerProperties
+    private val properties: OAuth2ResourceServerProperties,
 ) {
 
-    @Bean
-    fun jwtDecoder(): JwtDecoder {
-        val issuerUri = properties.jwt.issuerUri
-        val internalJwksUri = buildInternalJwksUri(issuerUri)
+	@Bean
+	fun jwtDecoder(): JwtDecoder {
+		val issuerUri = properties.jwt.issuerUri
+		val internalJwksUri = buildInternalJwksUri(issuerUri)
 
-        return NimbusJwtDecoder.withJwkSetUri(internalJwksUri).build()
-    }
+		return NimbusJwtDecoder.withJwkSetUri(internalJwksUri).build()
+	}
 
-    private fun buildInternalJwksUri(issuerUri: String?): String {
-        return when {
-            issuerUri?.contains(EXTERNAL_KEYCLOAK_HOST) == true -> {
-                issuerUri.replace(EXTERNAL_KEYCLOAK_HOST, INTERNAL_KEYCLOAK_HOST) + JWKS_ENDPOINT_PATH
-            }
-            else -> throw IllegalArgumentException("Expected localhost issuer URI but got: $issuerUri")
-        }
-    }
+	private fun buildInternalJwksUri(issuerUri: String?): String {
+		return when {
+			issuerUri?.contains(EXTERNAL_KEYCLOAK_HOST) == true -> {
+				issuerUri.replace(EXTERNAL_KEYCLOAK_HOST, INTERNAL_KEYCLOAK_HOST) + JWKS_ENDPOINT_PATH
+			}
 
-    companion object {
-        private const val EXTERNAL_KEYCLOAK_HOST = "localhost:8080"
-        private const val INTERNAL_KEYCLOAK_HOST = "keycloak:8080"
-        private const val JWKS_ENDPOINT_PATH = "/protocol/openid-connect/certs"
-    }
+			else -> throw IllegalArgumentException("Expected localhost issuer URI but got: $issuerUri")
+		}
+	}
+
+	companion object {
+		private const val EXTERNAL_KEYCLOAK_HOST = "localhost:8080"
+		private const val INTERNAL_KEYCLOAK_HOST = "keycloak:8080"
+		private const val JWKS_ENDPOINT_PATH = "/protocol/openid-connect/certs"
+	}
 }

@@ -9,7 +9,7 @@ data class SseEvent(
 	val reason: String,
 	val timestamp: String,
 	val contextWorkDirectory: String?,
-	val userExternalId: String
+	val userExternalId: String,
 ) {
 
 	companion object {

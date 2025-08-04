@@ -1,5 +1,5 @@
 package com.cordona.claudecodehooks.shared.models
 
 sealed class ClaudeHook {
-    abstract val metadata: HookMetadata
+	abstract val metadata: HookMetadata
 }

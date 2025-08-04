@@ -37,19 +37,19 @@ data class ApiKeyEntity(
 	val lastUsedAt: Instant? = null,
 
 	val expiresAt: Instant? = null,
-	
+
 	@CreatedDate
 	var createdAt: Instant? = null,
-	
+
 	@LastModifiedDate
 	var modifiedAt: Instant? = null,
-	
+
 	@CreatedBy
 	var createdBy: String? = null,
-	
+
 	@LastModifiedBy
 	var modifiedBy: String? = null,
-	
+
 	@Version
-	var version: Long? = null
+	var version: Long? = null,
 )

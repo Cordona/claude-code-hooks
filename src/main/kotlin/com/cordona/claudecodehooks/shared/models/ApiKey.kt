@@ -20,7 +20,7 @@ data class ApiKey(
 	fun isInvalid(): Boolean {
 		return !isActive || isExpired()
 	}
-	
+
 	fun isExpired(): Boolean {
 		return expiresAt?.let { expiresAt ->
 			Instant.now().isAfter(expiresAt)

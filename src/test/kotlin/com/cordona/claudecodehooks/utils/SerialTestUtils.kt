@@ -1,7 +1,6 @@
 package com.cordona.claudecodehooks.utils
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.assertj.core.api.Assertions.assertThat
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 

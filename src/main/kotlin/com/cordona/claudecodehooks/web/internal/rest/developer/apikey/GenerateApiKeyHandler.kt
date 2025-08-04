@@ -21,14 +21,14 @@ class GenerateApiKeyHandler(
 		val requestBody = request.body(GenerateApiKeyRequest::class.java)
 		val permissions = requestBody.permissions.mapNotNull { Permission.fromValue(it) }
 		val expiresAt = requestBody.expiresAt?.let { Instant.parse(it) }
-		
+
 		val command = GenerateApiKeyCommand(
 			externalId = externalId,
 			name = requestBody.name,
 			permissions = permissions,
 			expiresAt = expiresAt
 		)
-		
+
 		val apiKey = generateApiKey.execute(command)
 		val response = GenerateApiKeyResponse.from(apiKey)
 

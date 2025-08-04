@@ -7,7 +7,7 @@ import org.springframework.modulith.PackageInfo
 	displayName = "Service Layer",
 	allowedDependencies = [
 		"shared::enums",
-		"shared::models", 
+		"shared::models",
 		"shared::exceptions",
 		"shared::commands",
 		"shared::utils",

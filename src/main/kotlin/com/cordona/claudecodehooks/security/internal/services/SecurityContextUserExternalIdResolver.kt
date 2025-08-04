@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class SecurityContextUserExternalIdResolver : UserExternalIdResolver {
-	
+
 	override fun execute(): String {
 		val authentication = SecurityContextHolder.getContext().authentication
 		return when (authentication) {
@@ -17,9 +17,11 @@ class SecurityContextUserExternalIdResolver : UserExternalIdResolver {
 				val principal = authentication.principal as ApiKeyPrincipal
 				principal.userExternalId
 			}
+
 			is JwtAuthenticationToken -> {
 				authentication.token.subject
 			}
+
 			else -> throw IllegalArgumentException(
 				"Expected ApiKeyAuthenticationToken or JwtAuthenticationToken but got ${authentication?.javaClass?.simpleName}"
 			)

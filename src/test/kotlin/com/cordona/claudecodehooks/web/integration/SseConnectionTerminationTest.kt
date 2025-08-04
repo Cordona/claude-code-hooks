@@ -37,7 +37,7 @@ class SseConnectionTerminationTest : BaseWebTest() {
 			.`as`("User should have connections before disconnect")
 			.isNotNull()
 			.isNotEmpty()
-		
+
 		val connectionId = userConnectionsBefore!!.first().connectionId
 		val totalConnectionsBefore = connectionStore.getConnectionsCount()
 
@@ -85,7 +85,7 @@ class SseConnectionTerminationTest : BaseWebTest() {
 
 		val differentUserId = "different-user-12345"
 		val differentUserToken = JwtTestUtils.createJwtAuthenticationToken(differentUserId, USER)
-		
+
 		mvcTestUtils.assertDeleteWithAuthentication(
 			expectedStatus = FORBIDDEN,
 			endpoint = "${endpointProperties.claudeCode.hooks.events.stream.disconnect}/$connectionId",

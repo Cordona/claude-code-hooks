@@ -3,7 +3,7 @@ package com.cordona.claudecodehooks.infrastructure.internal.messaging.sse.heartb
 data class HeartbeatCycleResult(
 	var successCount: Int = 0,
 	var failureCount: Int = 0,
-	val staleConnections: MutableList<String> = mutableListOf()
+	val staleConnections: MutableList<String> = mutableListOf(),
 ) {
 	fun recordSuccess() {
 		successCount++

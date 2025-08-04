@@ -4,5 +4,5 @@ data class ErrorResponse(
     val statusCode: Int,
     val exceptionName: String,
     val message: String,
-    val timestamp: String = java.time.Instant.now().toString()
+    val timestamp: String = java.time.Instant.now().toString(),
 )

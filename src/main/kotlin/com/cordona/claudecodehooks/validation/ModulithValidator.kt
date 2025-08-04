@@ -16,7 +16,7 @@ private val logger = KotlinLogging.logger {}
 @Component
 @ConditionalOnProperty(prefix = "service.modulith.strict", name = ["enabled"], havingValue = "true")
 class ModulithValidator(
-	private val context: ConfigurableApplicationContext
+	private val context: ConfigurableApplicationContext,
 ) : ApplicationListener<ContextRefreshedEvent> {
 	override fun onApplicationEvent(event: ContextRefreshedEvent) {
 		val isStrctModulithService = Application::class.java.isAnnotationPresent(StrictModulith::class.java)

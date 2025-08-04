@@ -16,7 +16,7 @@ class SseTestClient(
 	private val restClient: RestClient,
 	private val sseEndpoint: String,
 	private val authHeaders: Map<String, String> = emptyMap(),
-	private val sseAssertions: SseAssertions? = null
+	private val sseAssertions: SseAssertions? = null,
 ) : Closeable {
 	private val logger = KotlinLogging.logger {}
 	private val events = ConcurrentLinkedQueue<String>()
@@ -28,17 +28,17 @@ class SseTestClient(
 
 	companion object {
 		const val LOCALHOST_BASE_URL = "http://localhost"
-		
+
 		fun create(
 			serverPort: Int,
 			sseEndpoint: String,
 			restClientBuilder: RestClient.Builder,
 			sseAssertions: SseAssertions,
-			authHeaders: Map<String, String> = emptyMap()
+			authHeaders: Map<String, String> = emptyMap(),
 		): SseTestClient {
 			val baseUrl = "$LOCALHOST_BASE_URL:$serverPort"
 			val restClient = restClientBuilder.baseUrl(baseUrl).build()
-			
+
 			return SseTestClient(
 				restClient = restClient,
 				sseEndpoint = sseEndpoint,
@@ -190,10 +190,12 @@ class SseTestClient(
 							events.offer(eventData)
 							logger.info { "Captured claude-hook event data: $eventData" }
 						}
+
 						"connected" -> {
 							connectionEvents.offer(eventData)
 							logger.info { "Captured connection event data: $eventData" }
 						}
+
 						else -> {
 							logger.debug { "Ignoring event: $eventName" }
 						}

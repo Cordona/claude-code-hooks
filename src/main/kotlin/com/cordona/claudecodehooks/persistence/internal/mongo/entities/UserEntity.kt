@@ -16,24 +16,24 @@ import java.util.UUID
 data class UserEntity(
 	@Id
 	val id: String = UUID.randomUUID().toString(),
-	
+
 	@Indexed(unique = true)
 	val externalId: String,
-	
+
 	val roles: Set<Role>,
-	
+
 	@CreatedDate
 	var createdAt: Instant? = null,
-	
+
 	@LastModifiedDate
 	var modifiedAt: Instant? = null,
-	
+
 	@CreatedBy
 	var createdBy: String? = null,
-	
+
 	@LastModifiedBy
 	var modifiedBy: String? = null,
-	
+
 	@Version
-	var version: Long? = null
+	var version: Long? = null,
 )

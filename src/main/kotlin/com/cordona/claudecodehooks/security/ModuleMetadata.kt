@@ -7,7 +7,7 @@ import org.springframework.modulith.PackageInfo
 	displayName = "Security Layer",
 	allowedDependencies = [
 		"shared::properties",
-		"shared::models", 
+		"shared::models",
 		"shared::enums",
 		"shared::exceptions",
 		"shared::utils",

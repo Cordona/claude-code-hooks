@@ -8,29 +8,29 @@ import java.time.Instant
 
 object JwtTestUtils {
 
-    fun createJwtAuthenticationToken(
-        keycloakExternalId: String,
-        role: Role
-    ): JwtAuthenticationToken = createJwtAuthenticationToken(keycloakExternalId, setOf(role))
+	fun createJwtAuthenticationToken(
+		keycloakExternalId: String,
+		role: Role,
+	): JwtAuthenticationToken = createJwtAuthenticationToken(keycloakExternalId, setOf(role))
 
-    fun createJwtAuthenticationToken(
-        keycloakExternalId: String,
-        roles: Set<Role>
-    ): JwtAuthenticationToken {
-        val jwt = Jwt.withTokenValue("test-token")
-            .header("alg", "RS256")
-            .header("typ", "JWT")
-            .subject(keycloakExternalId)
-            .issuer("https://localhost:8443/realms/claude-code-hooks")
-            .audience(listOf("claude-code-hooks"))
-            .issuedAt(Instant.now())
-            .expiresAt(Instant.now().plusSeconds(3600))
-            .build()
+	fun createJwtAuthenticationToken(
+		keycloakExternalId: String,
+		roles: Set<Role>,
+	): JwtAuthenticationToken {
+		val jwt = Jwt.withTokenValue("test-token")
+			.header("alg", "RS256")
+			.header("typ", "JWT")
+			.subject(keycloakExternalId)
+			.issuer("https://localhost:8443/realms/claude-code-hooks")
+			.audience(listOf("claude-code-hooks"))
+			.issuedAt(Instant.now())
+			.expiresAt(Instant.now().plusSeconds(3600))
+			.build()
 
-        val authorities = roles.map { role ->
-            SimpleGrantedAuthority("ROLE_${role.name}")
-        }
-        
-        return JwtAuthenticationToken(jwt, authorities)
-    }
+		val authorities = roles.map { role ->
+			SimpleGrantedAuthority("ROLE_${role.name}")
+		}
+
+		return JwtAuthenticationToken(jwt, authorities)
+	}
 }

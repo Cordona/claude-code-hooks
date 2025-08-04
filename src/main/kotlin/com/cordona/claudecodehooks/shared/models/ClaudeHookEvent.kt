@@ -8,5 +8,5 @@ data class ClaudeHookEvent(
 	val reason: String,
 	val timestamp: String,
 	val contextWorkDirectory: String?,
-	val userExternalId: String
+	val userExternalId: String,
 )

@@ -5,14 +5,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 @ConfigurationProperties(prefix = "service.web.endpoints")
 data class EndpointProperties(
 	val claudeCode: ClaudeCode,
-	val actuator: ActuatorEndpoints
+	val actuator: ActuatorEndpoints,
 ) {
 	data class ActuatorEndpoints(
 		val base: String,
 		val health: String,
-		val info: String
+		val info: String,
 	)
-	
+
 	data class ClaudeCode(
 		val base: String,
 		val hooks: Hooks,
@@ -28,9 +28,11 @@ data class EndpointProperties(
 			data class Notification(
 				val event: String,
 			)
+
 			data class Stop(
 				val event: String,
 			)
+
 			data class Events(
 				val stream: Stream,
 			) {
@@ -40,11 +42,11 @@ data class EndpointProperties(
 				)
 			}
 		}
-		
+
 		data class User(
 			val initialize: String,
 		)
-		
+
 		data class Developer(
 			val apiKey: ApiKey,
 		) {

@@ -13,11 +13,11 @@ import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.core.annotation.Order
 import org.springframework.security.authentication.AnonymousAuthenticationToken
-import org.springframework.security.oauth2.jwt.Jwt
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.oauth2.jwt.Jwt
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher
 import org.springframework.web.filter.OncePerRequestFilter
@@ -25,7 +25,7 @@ import org.springframework.web.filter.OncePerRequestFilter
 @TestConfiguration
 @EnableWebSecurity
 class TestSecurityConfig(
-    private val endpointProperties: EndpointProperties,
+	private val endpointProperties: EndpointProperties,
 ) {
 
 	@Bean
@@ -51,17 +51,20 @@ class TestSecurityConfig(
 	fun testJwtAuthenticationFilter(): OncePerRequestFilter {
 		return object : OncePerRequestFilter() {
 			override fun doFilterInternal(
-                request: HttpServletRequest,
-                response: HttpServletResponse,
-                filterChain: jakarta.servlet.FilterChain,
-            ) {
-				val sseConnectPathMatcher = AntPathRequestMatcher(endpointProperties.claudeCode.hooks.events.stream.connect)
-				val sseDisconnectPathMatcher = AntPathRequestMatcher(endpointProperties.claudeCode.hooks.events.stream.disconnect + "/**")
+				request: HttpServletRequest,
+				response: HttpServletResponse,
+				filterChain: jakarta.servlet.FilterChain,
+			) {
+				val sseConnectPathMatcher =
+					AntPathRequestMatcher(endpointProperties.claudeCode.hooks.events.stream.connect)
+				val sseDisconnectPathMatcher =
+					AntPathRequestMatcher(endpointProperties.claudeCode.hooks.events.stream.disconnect + "/**")
 
 				// Only set default authentication if none is already provided
 				val currentAuth = SecurityContextHolder.getContext().authentication
-				if ((sseConnectPathMatcher.matches(request) || sseDisconnectPathMatcher.matches(request)) && 
-					(currentAuth == null || currentAuth.name == "anonymousUser")) {
+				if ((sseConnectPathMatcher.matches(request) || sseDisconnectPathMatcher.matches(request)) &&
+					(currentAuth == null || currentAuth.name == "anonymousUser")
+				) {
 					val jwtAuth = JwtTestUtils.createJwtAuthenticationToken(TEST_USER_EXTERNAL_ID, Role.USER)
 					SecurityContextHolder.getContext().authentication = jwtAuth
 				}

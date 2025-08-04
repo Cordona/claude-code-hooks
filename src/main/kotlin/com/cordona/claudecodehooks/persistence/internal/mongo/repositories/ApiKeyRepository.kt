@@ -9,9 +9,9 @@ import java.util.Optional
 
 interface ApiKeyRepository : MongoRepository<ApiKeyEntity, String> {
 
-    fun findByLookupHash(lookupHash: String): Optional<ApiKeyEntity>
+	fun findByLookupHash(lookupHash: String): Optional<ApiKeyEntity>
 
-    @Query("{ '_id': ?0 }")
-    @Update("{ '\$set': { 'lastUsedAt': ?1 } }")
-    fun updateLastUsedAt(keyId: String, lastUsedAt: Instant)
+	@Query("{ '_id': ?0 }")
+	@Update("{ '\$set': { 'lastUsedAt': ?1 } }")
+	fun updateLastUsedAt(keyId: String, lastUsedAt: Instant)
 }

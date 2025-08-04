@@ -10,13 +10,13 @@ import org.springframework.stereotype.Service
 
 @Service
 class SecurityContextUserRolesResolver : UserRolesResolver {
-	
+
 	override fun execute(): Set<Role> {
 		val authentication = SecurityContextHolder.getContext().authentication
-		require(authentication is JwtAuthenticationToken) { 
-			"Expected JwtAuthenticationToken but got ${authentication?.javaClass?.simpleName}" 
+		require(authentication is JwtAuthenticationToken) {
+			"Expected JwtAuthenticationToken but got ${authentication?.javaClass?.simpleName}"
 		}
-		
+
 		return authentication.authorities
 			.filter { it.authority.startsWith("ROLE_") }
 			.mapNotNull { authority ->

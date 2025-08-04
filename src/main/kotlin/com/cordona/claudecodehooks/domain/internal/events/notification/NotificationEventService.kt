@@ -1,16 +1,16 @@
 package com.cordona.claudecodehooks.domain.internal.events.notification
 
-import com.cordona.claudecodehooks.infrastructure.external.api.EventPublisher
 import com.cordona.claudecodehooks.domain.external.api.NotificationEventProcessor
+import com.cordona.claudecodehooks.infrastructure.external.api.EventPublisher
 import com.cordona.claudecodehooks.shared.models.ClaudeHookEvent
 import com.cordona.claudecodehooks.shared.models.NotificationHook
 import org.springframework.stereotype.Service
 import java.time.Instant
-import java.util.*
+import java.util.UUID
 
 @Service
 class NotificationEventService(
-	private val eventPublisher: EventPublisher
+	private val eventPublisher: EventPublisher,
 ) : NotificationEventProcessor {
 
 	override fun execute(target: NotificationHook) {

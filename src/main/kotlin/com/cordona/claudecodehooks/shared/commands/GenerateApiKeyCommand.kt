@@ -7,5 +7,5 @@ data class GenerateApiKeyCommand(
     val externalId: String,
     val name: String,
     val permissions: List<Permission>,
-    val expiresAt: Instant? = null
+    val expiresAt: Instant? = null,
 )

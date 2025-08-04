@@ -19,14 +19,14 @@ class HeartbeatDeliveryTest : BaseHeartbeatTest() {
 		// Then: All connections receive heartbeats
 		allConnections.forEach { connection ->
 			val heartbeats = connection.waitForHeartbeats(
-				timeout = MULTI_HEARTBEAT_TIMEOUT, 
+				timeout = MULTI_HEARTBEAT_TIMEOUT,
 				expectedCount = expectedHeartbeatsPerConnection
 			)
-			
+
 			assertThat(heartbeats)
 				.`as`("Connection should receive expected number of heartbeats")
 				.hasSize(expectedHeartbeatsPerConnection)
-				
+
 			heartbeats.forEach { heartbeat ->
 				assertThat(heartbeat)
 					.`as`("Heartbeat content should be correct")
