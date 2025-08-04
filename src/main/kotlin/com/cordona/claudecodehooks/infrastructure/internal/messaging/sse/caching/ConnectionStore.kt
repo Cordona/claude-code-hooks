@@ -11,4 +11,6 @@ interface ConnectionStore {
 	fun getEmitter(connectionId: String): SseEmitter?
 	fun getConnectionsCount(): Long
 	fun getAllConnections(): List<Pair<ConnectionDetails, SseEmitter>>
+	fun updateConnectionHealth(connectionId: String, updatedDetails: ConnectionDetails): Boolean
+	fun getUnhealthyConnections(maxFailures: Int): List<ConnectionDetails>
 }

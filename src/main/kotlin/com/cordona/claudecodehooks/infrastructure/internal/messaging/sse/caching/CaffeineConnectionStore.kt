@@ -74,6 +74,44 @@ class CaffeineConnectionStore(
 		return removed
 	}
 
+	override fun updateConnectionHealth(connectionId: String, updatedDetails: ConnectionDetails): Boolean {
+		var updated = false
+
+		connectionsCache.asMap().forEach { (_, connections) ->
+			val connectionToUpdate = connections.find { it.connectionId == connectionId }
+			if (connectionToUpdate != null) {
+				connections.remove(connectionToUpdate)
+				connections.add(updatedDetails)
+				updated = true
+				logger.trace { "Updated health for connection with ID $connectionId" }
+			}
+		}
+
+		return updated
+	}
+
+	override fun getUserConnections(userExternalId: String): Set<ConnectionDetails>? = connectionsCache.getIfPresent(userExternalId)
+
+	override fun getEmitter(connectionId: String): SseEmitter? = emittersCache.getIfPresent(connectionId)
+
+	override fun getConnectionsCount(): Long = emittersCache.estimatedSize()
+
+	override fun getAllConnections(): List<Pair<ConnectionDetails, SseEmitter>> {
+		return connectionsCache.asMap().values
+			.flatMap { connections -> connections.toSet() }
+			.mapNotNull { metadata ->
+				emittersCache.getIfPresent(metadata.connectionId)?.let { emitter ->
+					metadata to emitter
+				}
+			}
+	}
+
+	override fun getUnhealthyConnections(maxFailures: Int): List<ConnectionDetails> {
+		return connectionsCache.asMap().values
+			.flatMap { connections -> connections.toSet() }
+			.filter { it.isUnhealthy(maxFailures) }
+	}
+
 	private fun createConnectionsCache(): Cache<String, MutableSet<ConnectionDetails>> {
 		return Caffeine.newBuilder()
 			.maximumSize(sseProperties.cache.maxUsers)
@@ -93,21 +131,5 @@ class CaffeineConnectionStore(
 				runCatching { emitter?.complete() }
 			}
 			.build<String, SseEmitter>()
-	}
-
-	override fun getUserConnections(userExternalId: String): Set<ConnectionDetails>? = connectionsCache.getIfPresent(userExternalId)
-
-	override fun getEmitter(connectionId: String): SseEmitter? = emittersCache.getIfPresent(connectionId)
-
-	override fun getConnectionsCount(): Long = emittersCache.estimatedSize()
-
-	override fun getAllConnections(): List<Pair<ConnectionDetails, SseEmitter>> {
-		return connectionsCache.asMap().values
-			.flatMap { connections -> connections.toSet() }
-			.mapNotNull { metadata ->
-				emittersCache.getIfPresent(metadata.connectionId)?.let { emitter ->
-					metadata to emitter
-				}
-			}
 	}
 }
