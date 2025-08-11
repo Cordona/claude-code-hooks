@@ -4,6 +4,8 @@ import com.cordona.claudecodehooks.base.BaseWebTest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.skyscreamer.jsonassert.JSONAssert
+import org.skyscreamer.jsonassert.JSONCompareMode.STRICT
 import org.springframework.http.HttpStatus.NO_CONTENT
 
 
@@ -36,7 +38,7 @@ class NotificationHookTest : BaseWebTest() {
 		val actual = hookEvents.first()
 		val expected = fileTestUtils.fileToString(SOURCE_DIR, "expected_event_for_bash_use_notification.json")
 
-		jsonTestUtils.jsonAssertWithIgnoredFields(actual, expected, "id", "timestamp")
+		JSONAssert.assertEquals(expected, actual, STRICT)
 	}
 
 	@Test
@@ -57,7 +59,7 @@ class NotificationHookTest : BaseWebTest() {
 		val expected =
 			fileTestUtils.fileToString(SOURCE_DIR, "expected_event_for_plan_approval.json.json")
 
-		jsonTestUtils.jsonAssertWithIgnoredFields(actual, expected, "id", "timestamp")
+		JSONAssert.assertEquals(expected, actual, STRICT)
 	}
 
 	companion object {

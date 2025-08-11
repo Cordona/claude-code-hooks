@@ -1,7 +1,29 @@
 {
-  "session_id": "54301c1b-757e-4ef5-ac1a-c9d59d8d0bf1",
-  "transcript_path": "/Users/cordona/.claude/projects/-Users-cordona-IdeaProjects-cordona-claude-code-hooks/54301c1b-757e-4ef5-ac1a-c9d59d8d0bf1.jsonl",
-  "cwd": "/Users/cordona/IdeaProjects/cordona/claude-code-hooks",
-  "hook_event_name": "Notification",
-  "message": "Claude needs your permission to use bash"
+  "host_event_id": "e474a17f-52db-4886-aafa-e332c6852b98",
+  "payload": {
+    "session_id": "54301c1b-757e-4ef5-ac1a-c9d59d8d0bf1",
+    "transcript_path": "test/transcript/path/54301c1b-757e-4ef5-ac1a-c9d59d8d0bf1.jsonl",
+    "cwd": "test/transcript/path/test-project",
+    "hook_event_name": "Notification",
+    "message": "Claude needs your permission to use bash"
+  },
+  "host_telemetry": {
+    "daemon_details": {
+      "id": "TestComputerName-TestUserName-58434",
+      "pid": 58434
+    },
+    "host_details": {
+      "hostname": "TestComputerName",
+      "platform": "macos",
+      "private_ip": "192.168.1.100",
+      "public_ip": "203.0.113.50",
+      "username": "TestUserName"
+    },
+    "tmux_session": {
+      "pane_id": "%2",
+      "session_id": "$2",
+      "session_name": "test-claude-session"
+    }
+  },
+  "timestamp": "2025-08-09T14:47:27.266975+00:00"
 }
