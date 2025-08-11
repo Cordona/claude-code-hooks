@@ -2,6 +2,6 @@ package com.cordona.claudecodehooks.shared.models
 
 data class StopHook(
     val stopHookActive: Boolean,
-    val contextWorkDirectory: String?,
-    override val metadata: HookMetadata,
+    override val hookMetadata: HookMetadata,
+    override val hostTelemetry: HostTelemetry,
 ) : ClaudeHook()

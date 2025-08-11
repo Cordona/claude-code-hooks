@@ -2,7 +2,7 @@ package com.cordona.claudecodehooks.infrastructure.internal.messaging.sse.event
 
 import com.cordona.claudecodehooks.infrastructure.external.api.EventPublisher
 import com.cordona.claudecodehooks.infrastructure.internal.messaging.sse.caching.ConnectionStore
-import com.cordona.claudecodehooks.shared.models.ClaudeHookEvent
+import com.cordona.claudecodehooks.shared.models.HookEvent
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.stereotype.Component
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
@@ -14,8 +14,8 @@ class SseEventPublisher(
 
 	private val logger = KotlinLogging.logger {}
 
-	override fun publish(userExternalId: String, event: ClaudeHookEvent) {
-		val sseEvent = SseEvent.Companion.from(event)
+	override fun publish(event: HookEvent) {
+		val userExternalId = event.hookMetadata.userExternalId
 		val userConnections = connectionStore.getUserConnections(userExternalId)
 
 		if (userConnections.isNullOrEmpty()) {
@@ -25,7 +25,7 @@ class SseEventPublisher(
 
 		userConnections.forEach { metadata ->
 			connectionStore.getEmitter(metadata.connectionId)?.let { emitter ->
-				val success = sendEventToConnection(emitter, sseEvent)
+				val success = sendEventToConnection(emitter, event)
 				if (!success) {
 					logger.warn { "Failed to deliver event to connection with ID ${metadata.connectionId}" }
 				}

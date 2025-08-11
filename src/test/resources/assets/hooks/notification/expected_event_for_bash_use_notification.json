@@ -1,8 +1,30 @@
 {
-  "id": "IGNORE_FIELD",
-  "hookType": "notification",
   "reason": "Claude needs your permission to use bash",
-  "timestamp": "IGNORE_FIELD",
-  "contextWorkDirectory": "/Users/cordona/IdeaProjects/cordona/claude-code-hooks",
-  "userExternalId": "00000000-0000-0000-0000-000000000001"
+  "hookMetadata": {
+    "timestamp": "2025-08-09T14:47:27.266975+00:00",
+    "userExternalId": "00000000-0000-0000-0000-000000000001",
+    "claudeSessionId": "54301c1b-757e-4ef5-ac1a-c9d59d8d0bf1",
+    "hostEventId": "e474a17f-52db-4886-aafa-e332c6852b98",
+    "hookType": "notification",
+    "transcriptPath": "test/transcript/path/54301c1b-757e-4ef5-ac1a-c9d59d8d0bf1.jsonl",
+    "contextWorkDirectory": "test/transcript/path/test-project"
+  },
+  "hostTelemetry": {
+    "daemon_details": {
+      "id": "TestComputerName-TestUserName-58434",
+      "pid": 58434
+    },
+    "host_details": {
+      "hostname": "TestComputerName",
+      "platform": "macos",
+      "private_ip": "192.168.1.100",
+      "public_ip": "203.0.113.50",
+      "username": "TestUserName"
+    },
+    "tmux_session": {
+      "pane_id": "%2",
+      "session_id": "$2",
+      "session_name": "test-claude-session"
+    }
+  }
 }
